@@ -458,10 +458,16 @@ MonoBehaviour:
   dungeonBounds:
     x: 0
     y: 0
-    width: 500
-    height: 500
+    width: 100
+    height: 100
+  minRoomSize:
+    x: 0
+    y: 0
+    width: 10
+    height: 10
   wallWidth: 1
-  splitHorizontally: 1
+  seed: 4563
+  secondsPerOperation: 0.1
 --- !u!4 &1391267070
 Transform:
   m_ObjectHideFlags: 0

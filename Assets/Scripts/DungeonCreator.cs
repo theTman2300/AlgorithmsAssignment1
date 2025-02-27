@@ -7,14 +7,13 @@ public class DungeonCreator : MonoBehaviour
 {
     /*
      TODO:
-    -do away with wallWitdh
-    -make seeds work
+    -do away with wallWitdh - DONE
+    -make seeds work (done by using random.value instead of random.range)
     -make the room generation look better
      */
 
     [SerializeField] RectInt dungeonBounds;
     [SerializeField] RectInt minRoomSize;
-    [SerializeField] int wallWidth = 1;
     [HorizontalLine]
     [SerializeField] int seed = 0; //this doesn't work
     [SerializeField] float secondsPerOperation = .5f;
@@ -29,11 +28,9 @@ public class DungeonCreator : MonoBehaviour
         smallestRoomWidth = dungeonBounds.width;
         smallestRoomHeight = dungeonBounds.height;
 
-        dungeonBounds.width += wallWidth;
-        dungeonBounds.height += wallWidth;
         rooms.Add(dungeonBounds);
 
-        UnityEngine.Random.InitState(seed); //this is broken for now
+        Random.InitState(seed); //this is broken for now
         StartCoroutine(CreateRooms());
     }
 
@@ -60,18 +57,18 @@ public class DungeonCreator : MonoBehaviour
         {
             for (int i = 0; i < rooms.Count; i++)
             {
-                int randomNumber = Random.Range(0, 3);
+                int randomNumber = Mathf.RoundToInt(Random.value * 3);
                 if (rooms[i].width <= minRoomSize.width && rooms[i].height <= minRoomSize.height)
                 {
                     randomNumber = 3;
                 }
                 else if (rooms[i].width <= minRoomSize.width)
                 {
-                    randomNumber = Random.Range(0, 2) == 0 ? 1 : 3;
+                    randomNumber = Mathf.RoundToInt(Random.value * 2) == 0 ? 1 : 3;
                 }
-                else if(rooms[i].height <= minRoomSize.height)
+                else if (rooms[i].height <= minRoomSize.height)
                 {
-                    randomNumber = Random.Range(0, 2) == 0 ? 0 : 3;
+                    randomNumber = Mathf.RoundToInt(Random.value * 2) == 0 ? 0 : 3;
                 }
 
                 if (randomNumber == 0)
@@ -104,17 +101,17 @@ public class DungeonCreator : MonoBehaviour
         RectInt newRoomLeft = new RectInt(
             currentRoom.x,
             currentRoom.y,
-            (currentRoom.width - wallWidth) / 2 + wallWidth,
+            currentRoom.width / 2,
             currentRoom.height
             );
         RectInt newRoomRight = new RectInt(
-            currentRoom.x + ((currentRoom.width - wallWidth) / 2),
+            currentRoom.x + (currentRoom.width / 2 - 1),
             currentRoom.y,
-            (currentRoom.width - wallWidth) / 2 + wallWidth,
+            currentRoom.width - (currentRoom.width / 2 - 1),
             currentRoom.height
             );
 
-        smallestRoomWidth = newRoomLeft.width - wallWidth < smallestRoomWidth ? newRoomLeft.width - wallWidth : smallestRoomWidth;
+        smallestRoomWidth = newRoomLeft.width < smallestRoomWidth ? newRoomLeft.width : smallestRoomWidth;
         newRooms.Insert(roomIndex, newRoomRight);
         newRooms.Insert(roomIndex, newRoomLeft);
     }
@@ -127,16 +124,16 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.x,
             currentRoom.y,
             currentRoom.width,
-            (currentRoom.height - wallWidth) / 2 + wallWidth
+            currentRoom.height / 2
             );
         RectInt newRoomTop = new RectInt(
             currentRoom.x,
-            currentRoom.y + ((currentRoom.height - wallWidth) / 2),
+            currentRoom.y + (currentRoom.height / 2 - 1),
             currentRoom.width,
-            (currentRoom.height - wallWidth) / 2 + wallWidth
+            currentRoom.height - (currentRoom.height / 2 - 1)
             );
 
-        smallestRoomHeight = newRoomBottom.height - wallWidth < smallestRoomHeight ? newRoomBottom.height - wallWidth : smallestRoomHeight;
+        smallestRoomHeight = newRoomBottom.height < smallestRoomHeight ? newRoomBottom.height : smallestRoomHeight;
         newRooms.Insert(roomIndex, newRoomTop);
         newRooms.Insert(roomIndex, newRoomBottom);
     }

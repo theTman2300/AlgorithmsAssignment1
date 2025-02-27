@@ -465,8 +465,7 @@ MonoBehaviour:
     y: 0
     width: 10
     height: 10
-  wallWidth: 1
-  seed: 4563
+  seed: 71
   secondsPerOperation: 0.1
 --- !u!4 &1391267070
 Transform:

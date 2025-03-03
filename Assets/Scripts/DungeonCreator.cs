@@ -24,7 +24,6 @@ public class DungeonCreator : MonoBehaviour
         ResetDungeon();
     }
 
-
     [Button] private void ResetDungeon()
     {
         StopAllCoroutines();
@@ -43,11 +42,11 @@ public class DungeonCreator : MonoBehaviour
         //show the current rooms
         foreach (RectInt room in rooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.white);
+            AlgorithmsUtils.DebugRectInt(room, Color.yellow);
         }
         foreach (RectInt room in completedRooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.yellow);
+            AlgorithmsUtils.DebugRectInt(room, Color.white);
         }
 
         //show the division process

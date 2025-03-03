@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class DungeonCreator : MonoBehaviour
@@ -13,7 +14,9 @@ public class DungeonCreator : MonoBehaviour
 
     List<RectInt> rooms = new List<RectInt>();
     List<RectInt> newRooms = new List<RectInt>();
+    List<RectInt> completedRooms = new List<RectInt>();
     RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0);
+    RectInt minRoomBounds;
     System.Random rng; //this is used because unity random isn't deterministic when using ienumerators
 
     void Start()
@@ -21,11 +24,15 @@ public class DungeonCreator : MonoBehaviour
         ResetDungeon();
     }
 
-    private void ResetDungeon()
+
+    [Button] private void ResetDungeon()
     {
+        StopAllCoroutines();
         rooms.Clear();
         newRooms.Clear();
+        completedRooms.Clear();
         rooms.Add(dungeonBounds);
+        minRoomBounds = new RectInt(0, 0, minRoomSize.width * 2, minRoomSize.height * 2);
 
         rng = new System.Random(seed);
         StartCoroutine(CreateRooms());
@@ -37,6 +44,10 @@ public class DungeonCreator : MonoBehaviour
         foreach (RectInt room in rooms)
         {
             AlgorithmsUtils.DebugRectInt(room, Color.white);
+        }
+        foreach (RectInt room in completedRooms)
+        {
+            AlgorithmsUtils.DebugRectInt(room, Color.yellow);
         }
 
         //show the division process
@@ -52,24 +63,22 @@ public class DungeonCreator : MonoBehaviour
     {
 
         int loops = 0; //make sure it doesn't get in an infinite loop
-        while (loops < 69420) //fix this to be conditional instead of just an amount of loops
+        while (rooms.Count > 0 && loops < 50)
         {
             for (int i = 0; i < rooms.Count; i++)
             {
                 currentWorkingRoom = rooms[i];
                 int randomNumber = rng.Next(0, 2);
-                int randomWidth = rng.Next(0, 5) + Mathf.RoundToInt(minRoomSize.width * 1.25f);
-                int randomHeight = rng.Next(0, 5) + Mathf.RoundToInt(minRoomSize.height * 1.25f);
 
-                if (rooms[i].width <= randomWidth && rooms[i].height > randomHeight)
+                if (rooms[i].width <= minRoomBounds.width && rooms[i].height > minRoomBounds.height)
                 {
                     randomNumber = 1;
                 }
-                if (rooms[i].width > randomWidth && rooms[i].height <= randomHeight)
+                if (rooms[i].width > minRoomBounds.width && rooms[i].height <= minRoomBounds.height)
                 {
                     randomNumber = 0;
                 }
-                if (rooms[i].width <= randomWidth && rooms[i].height <= randomHeight)
+                if (rooms[i].width <= minRoomBounds.width && rooms[i].height <= minRoomBounds.height)
                 {
                     randomNumber = 3;
                 }
@@ -95,13 +104,19 @@ public class DungeonCreator : MonoBehaviour
             currentWorkingRoom = new RectInt(0, 0, 0, 0);
             loops++;
         }
+
+        if (rooms.Count > 0)
+        {
+            Debug.LogWarning("CreateRooms exceeded max amount of loops");
+        }
+
         yield return new WaitForSeconds(secondsPerOperation);
-    }
+    }    
 
     void SplitRoomHorizontally(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int splitOffset = rng.Next(-2, 2);
+        int splitOffset = rng.Next(-5, 5);
 
         RectInt newRoomLeft = new RectInt(
             currentRoom.x,
@@ -116,14 +131,21 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height
             );
 
-        newRooms.Insert(roomIndex, newRoomRight);
-        newRooms.Insert(roomIndex, newRoomLeft);
+        if (newRoomLeft.width <= minRoomBounds.width && newRoomLeft.height <= minRoomBounds.height)
+            completedRooms.Add(newRoomLeft);
+        else 
+            newRooms.Add(newRoomLeft);
+
+        if (newRoomRight.width <= minRoomBounds.width && newRoomRight.height <= minRoomBounds.height)
+            completedRooms.Add(newRoomRight);
+        else
+            newRooms.Add(newRoomRight);
     }
 
     void SplitRoomVertically(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int splitOffset = rng.Next(-2, 2);
+        int splitOffset = rng.Next(-5, 5);
 
         RectInt newRoomBottom = new RectInt(
             currentRoom.x,
@@ -138,7 +160,14 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height - (currentRoom.height / 2 - 1) - splitOffset
             );
 
-        newRooms.Insert(roomIndex, newRoomTop);
-        newRooms.Insert(roomIndex, newRoomBottom);
+        if (newRoomBottom.width <= minRoomBounds.width && newRoomBottom.height <= minRoomBounds.height)
+            completedRooms.Add(newRoomBottom);
+        else
+            newRooms.Add(newRoomBottom);
+
+        if (newRoomTop.width <= minRoomBounds.width && newRoomTop.height <= minRoomBounds.height)
+            completedRooms.Add(newRoomTop);
+        else
+            newRooms.Add(newRoomTop);
     }
 }

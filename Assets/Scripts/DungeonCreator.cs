@@ -52,7 +52,7 @@ public class DungeonCreator : MonoBehaviour
     {
 
         int loops = 0; //make sure it doesn't get in an infinite loop
-        while (loops < 8)
+        while (loops < 69420) //fix this to be conditional instead of just an amount of loops
         {
             for (int i = 0; i < rooms.Count; i++)
             {

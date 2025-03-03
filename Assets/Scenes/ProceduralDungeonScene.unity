@@ -466,7 +466,7 @@ MonoBehaviour:
     width: 10
     height: 10
   seed: 71
-  secondsPerOperation: 0.1
+  secondsPerOperation: 0
 --- !u!4 &1391267070
 Transform:
   m_ObjectHideFlags: 0

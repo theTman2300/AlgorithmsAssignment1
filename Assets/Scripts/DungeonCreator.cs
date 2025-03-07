@@ -11,8 +11,9 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField] RectInt maxRoomSize;
     [SerializeField] RectInt minRoomSize;
     [HorizontalLine]
-    [SerializeField] int seed = 0; //this doesn't work
+    [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
+    [SerializeField] bool generateInstantly = false;
 
     public List<RectInt> rooms = new List<RectInt>();
     public List<RectInt> newRooms = new List<RectInt>();
@@ -62,7 +63,7 @@ public class DungeonCreator : MonoBehaviour
     IEnumerator CreateRooms()
     {
         int loops = 0; //make sure it doesn't get in an infinite loop
-        while (rooms.Count > 0 && loops < 50)
+        while (rooms.Count > 0 && loops < 29)
         {
             for (int i = 0; i < rooms.Count; i++)
             {
@@ -74,6 +75,10 @@ public class DungeonCreator : MonoBehaviour
                 if (currentWorkingRoom.width > currentWorkingRoom.height)
                 {
                     randomNumber = 0;
+                }
+                else
+                {
+                    randomNumber = 1;
                 }
 
                 if (rooms[i].width <= maxRoomSize.width && rooms[i].height > maxRoomSize.height)
@@ -92,17 +97,20 @@ public class DungeonCreator : MonoBehaviour
                 if (randomNumber == 0)
                 {
                     SplitRoomVertically(i);
+                    if (!generateInstantly)
                     yield return new WaitForSeconds(secondsPerOperation);
                 }
                 else if (randomNumber == 1)
                 {
                     SplitRoomHorizontally(i);
-                    yield return new WaitForSeconds(secondsPerOperation);
+                    if (!generateInstantly)
+                        yield return new WaitForSeconds(secondsPerOperation);
                 }
                 else
                 {
                     newRooms.Add(rooms[i]);
-                    yield return new WaitForSeconds(secondsPerOperation);
+                    if (!generateInstantly)
+                        yield return new WaitForSeconds(secondsPerOperation);
                 }
             }
             rooms = new List<RectInt>(newRooms);
@@ -111,12 +119,14 @@ public class DungeonCreator : MonoBehaviour
             loops++;
         }
 
+        Debug.Log("loops: " + loops);
         if (rooms.Count > 0)
         {
             Debug.LogWarning("CreateRooms exceeded max amount of loops");
         }
 
-        yield return new WaitForSeconds(secondsPerOperation);
+        if (!generateInstantly)
+            yield return new WaitForSeconds(secondsPerOperation);
     }
 
     void SplitRoomVertically(int roomIndex)

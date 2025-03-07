@@ -458,13 +458,13 @@ MonoBehaviour:
   dungeonBounds:
     x: 0
     y: 0
-    width: 500
-    height: 500
-  minRoomSize:
+    width: 100
+    height: 100
+  maxRoomSize:
     x: 0
     y: 0
-    width: 10
-    height: 10
+    width: 15
+    height: 15
   seed: 71
   secondsPerOperation: 0
 --- !u!4 &1391267070

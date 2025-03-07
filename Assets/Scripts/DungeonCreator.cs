@@ -7,7 +7,7 @@ using UnityEngine;
 public class DungeonCreator : MonoBehaviour
 {
     [SerializeField] RectInt dungeonBounds;
-    [SerializeField] RectInt minRoomSize;
+    [SerializeField] RectInt maxRoomSize;
     [HorizontalLine]
     [SerializeField] int seed = 0; //this doesn't work
     [SerializeField] float secondsPerOperation = .5f;
@@ -16,7 +16,6 @@ public class DungeonCreator : MonoBehaviour
     List<RectInt> newRooms = new List<RectInt>();
     List<RectInt> completedRooms = new List<RectInt>();
     RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0);
-    RectInt minRoomBounds;
     System.Random rng; //this is used because unity random isn't deterministic when using ienumerators
 
     void Start()
@@ -31,7 +30,7 @@ public class DungeonCreator : MonoBehaviour
         newRooms.Clear();
         completedRooms.Clear();
         rooms.Add(dungeonBounds);
-        minRoomBounds = new RectInt(0, 0, minRoomSize.width * 2, minRoomSize.height * 2);
+
 
         rng = new System.Random(seed);
         StartCoroutine(CreateRooms());
@@ -69,27 +68,27 @@ public class DungeonCreator : MonoBehaviour
                 currentWorkingRoom = rooms[i];
                 int randomNumber = rng.Next(0, 2);
 
-                if (rooms[i].width <= minRoomBounds.width && rooms[i].height > minRoomBounds.height)
+                if (rooms[i].width <= maxRoomSize.width && rooms[i].height > maxRoomSize.height)
                 {
                     randomNumber = 1;
                 }
-                if (rooms[i].width > minRoomBounds.width && rooms[i].height <= minRoomBounds.height)
+                if (rooms[i].width > maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
                 {
                     randomNumber = 0;
                 }
-                if (rooms[i].width <= minRoomBounds.width && rooms[i].height <= minRoomBounds.height)
+                if (rooms[i].width <= maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
                 {
                     randomNumber = 3;
                 }
 
                 if (randomNumber == 0)
                 {
-                    SplitRoomHorizontally(i);
+                    SplitRoomVertically(i);
                     yield return new WaitForSeconds(secondsPerOperation);
                 }
                 else if (randomNumber == 1)
                 {
-                    SplitRoomVertically(i);
+                    SplitRoomHorizontally(i);
                     yield return new WaitForSeconds(secondsPerOperation);
                 }
                 else
@@ -112,10 +111,10 @@ public class DungeonCreator : MonoBehaviour
         yield return new WaitForSeconds(secondsPerOperation);
     }    
 
-    void SplitRoomHorizontally(int roomIndex)
+    void SplitRoomVertically(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int splitOffset = rng.Next(-5, 5);
+        int splitOffset = rng.Next(-2, 2);
 
         RectInt newRoomLeft = new RectInt(
             currentRoom.x,
@@ -130,21 +129,21 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height
             );
 
-        if (newRoomLeft.width <= minRoomBounds.width && newRoomLeft.height <= minRoomBounds.height)
+        if (newRoomLeft.width <= maxRoomSize.width && newRoomLeft.height <= maxRoomSize.height)
             completedRooms.Add(newRoomLeft);
         else 
             newRooms.Add(newRoomLeft);
 
-        if (newRoomRight.width <= minRoomBounds.width && newRoomRight.height <= minRoomBounds.height)
+        if (newRoomRight.width <= maxRoomSize.width && newRoomRight.height <= maxRoomSize.height)
             completedRooms.Add(newRoomRight);
         else
             newRooms.Add(newRoomRight);
     }
 
-    void SplitRoomVertically(int roomIndex)
+    void SplitRoomHorizontally(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int splitOffset = rng.Next(-5, 5);
+        int splitOffset = rng.Next(-2, 2);
 
         RectInt newRoomBottom = new RectInt(
             currentRoom.x,
@@ -159,12 +158,12 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height - (currentRoom.height / 2 - 1) - splitOffset
             );
 
-        if (newRoomBottom.width <= minRoomBounds.width && newRoomBottom.height <= minRoomBounds.height)
+        if (newRoomBottom.width <= maxRoomSize.width && newRoomBottom.height <= maxRoomSize.height)
             completedRooms.Add(newRoomBottom);
         else
             newRooms.Add(newRoomBottom);
 
-        if (newRoomTop.width <= minRoomBounds.width && newRoomTop.height <= minRoomBounds.height)
+        if (newRoomTop.width <= maxRoomSize.width && newRoomTop.height <= maxRoomSize.height)
             completedRooms.Add(newRoomTop);
         else
             newRooms.Add(newRoomTop);

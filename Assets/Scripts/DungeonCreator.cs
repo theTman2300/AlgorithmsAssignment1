@@ -71,36 +71,36 @@ public class DungeonCreator : MonoBehaviour
                 //Otherwise make some other parts look more random
 
                 currentWorkingRoom = rooms[i];
-                int randomNumber = 1;
+                int splitType = 1;
                 if (currentWorkingRoom.width > currentWorkingRoom.height)
                 {
-                    randomNumber = 0;
+                    splitType = 0;
                 }
                 else
                 {
-                    randomNumber = 1;
+                    splitType = 1;
                 }
 
                 if (rooms[i].width <= maxRoomSize.width && rooms[i].height > maxRoomSize.height)
                 {
-                    randomNumber = 1;
+                    splitType = 1;
                 }
                 if (rooms[i].width > maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
                 {
-                    randomNumber = 0;
+                    splitType = 0;
                 }
                 if (rooms[i].width <= maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
                 {
-                    randomNumber = 3;
+                    splitType = 3;
                 }
 
-                if (randomNumber == 0)
+                if (splitType == 0)
                 {
                     SplitRoomVertically(i);
                     if (!generateInstantly)
                     yield return new WaitForSeconds(secondsPerOperation);
                 }
-                else if (randomNumber == 1)
+                else if (splitType == 1)
                 {
                     SplitRoomHorizontally(i);
                     if (!generateInstantly)

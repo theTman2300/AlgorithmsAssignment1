@@ -510,19 +510,19 @@ MonoBehaviour:
   maxGenerationSize:
     x: 0
     y: 0
-    width: 200
-    height: 200
+    width: 75
+    height: 75
   maxRoomSize:
     x: 0
     y: 0
-    width: 20
-    height: 20
+    width: 15
+    height: 15
   minRoomSize:
     x: 0
     y: 0
-    width: 7
-    height: 7
-  seed: 0
+    width: 5
+    height: 5
+  seed: 785632
   secondsPerOperation: 0
   generateInstantly: 0
   rooms: []

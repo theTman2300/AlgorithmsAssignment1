@@ -127,6 +127,11 @@ public class DungeonCreator : MonoBehaviour
 
         if (!generateInstantly)
             yield return new WaitForSeconds(secondsPerOperation);
+
+        //loop:
+        //(Make sure generateInstantly is DISABLED)
+        //seed++;
+        //ResetDungeon();
     }
 
     void SplitRoomVertically(int roomIndex)
@@ -141,7 +146,7 @@ public class DungeonCreator : MonoBehaviour
         {
             maxSplit = currentRoom.width - minRoomSize.width;
         }
-        int splitPosition = rng.Next(minRoomSize.width, maxSplit);
+        int splitPosition = rng.Next(minRoomSize.width + 2, maxSplit);
         if (rng.Next(0, 2) == 0)
         {
             splitPosition = currentRoom.width - splitPosition;
@@ -183,7 +188,7 @@ public class DungeonCreator : MonoBehaviour
         {
             maxSplit = currentRoom.height - minRoomSize.height;
         }
-        int splitPosition = rng.Next(minRoomSize.height, maxSplit);
+        int splitPosition = rng.Next(minRoomSize.height + 2, maxSplit);
         if (rng.Next(0, 2) == 0)
         {
             splitPosition = currentRoom.height - splitPosition;

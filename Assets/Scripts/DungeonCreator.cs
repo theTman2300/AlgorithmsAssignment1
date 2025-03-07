@@ -67,9 +67,14 @@ public class DungeonCreator : MonoBehaviour
             for (int i = 0; i < rooms.Count; i++)
             {
                 //Test out changing it so that it always splits the room in its biggest acis. (so if room width is bigger then room height, then split vertically)
+                //Otherwise make some other parts look more random
 
                 currentWorkingRoom = rooms[i];
-                int randomNumber = rng.Next(0, 2);
+                int randomNumber = 1;
+                if (currentWorkingRoom.width > currentWorkingRoom.height)
+                {
+                    randomNumber = 0;
+                }
 
                 if (rooms[i].width <= maxRoomSize.width && rooms[i].height > maxRoomSize.height)
                 {

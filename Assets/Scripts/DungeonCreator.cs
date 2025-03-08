@@ -7,6 +7,7 @@ using UnityEngine;
 public class DungeonCreator : MonoBehaviour
 {
     [SerializeField] RectInt dungeonBounds;
+    [Tooltip("Used to avoid spiral pattern when creating larger dungeons \n Must alway be bigger then minSize + 2, but reccomended to be somewhere around 3/4 of dungeonBounds")]
     [SerializeField] RectInt maxGenerationSize;
     [SerializeField] RectInt maxRoomSize;
     [SerializeField] RectInt minRoomSize;
@@ -14,12 +15,12 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
     [SerializeField] bool generateInstantly = false;
-
-    public List<RectInt> rooms = new List<RectInt>();
-    public List<RectInt> newRooms = new List<RectInt>();
-    public List<RectInt> completedRooms = new List<RectInt>();
-    RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0);
-    System.Random rng; //this is used because unity random isn't deterministic when using ienumerators
+    [HorizontalLine]
+    [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
+    [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
+    [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
+    RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0); //current room being split
+    System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
     void Start()
     {
@@ -29,11 +30,17 @@ public class DungeonCreator : MonoBehaviour
     [Button]
     private void ResetDungeon()
     {
-        StopAllCoroutines();
+        StopAllCoroutines(); //in event that dungeon generator was still running when this function is called
         rooms.Clear();
         newRooms.Clear();
         completedRooms.Clear();
         rooms.Add(dungeonBounds);
+
+        //check wether maxGenerationSize is bigger then minimum
+        if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
+        {
+            Debug.LogError("MaxGenerationSize is smaller then minimum of width: " + (minRoomSize.width + 2) + " and height: " + (minRoomSize.height + 2));
+        }
 
         rng = new System.Random(seed);
         StartCoroutine(CreateRooms());
@@ -41,94 +48,75 @@ public class DungeonCreator : MonoBehaviour
 
     void Update()
     {
-        //show the current rooms
+        //show the rooms
         foreach (RectInt room in rooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.yellow);
+            AlgorithmsUtils.DebugRectInt(room, Color.yellow); //rooms to be split
         }
         foreach (RectInt room in completedRooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.white);
+            AlgorithmsUtils.DebugRectInt(room, Color.white); //completed rooms
         }
 
-        //show the division process
         foreach (RectInt room in newRooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.green);
+            AlgorithmsUtils.DebugRectInt(room, Color.green); //rooms that have been split this loop
         }
-        //show the front of the division process
-        AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan);
+        AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan); //current room being split
     }
 
     IEnumerator CreateRooms()
     {
-        int loops = 0; //make sure it doesn't get in an infinite loop
-        while (rooms.Count > 0 && loops < 29)
+        while (rooms.Count > 0) //while there are still rooms to be split
         {
             for (int i = 0; i < rooms.Count; i++)
             {
-                //Test out changing it so that it always splits the room in its biggest acis. (so if room width is bigger then room height, then split vertically)
-                //Otherwise make some other parts look more random
-
                 currentWorkingRoom = rooms[i];
-                int splitType = 1;
-                if (currentWorkingRoom.width > currentWorkingRoom.height)
-                {
-                    splitType = 0;
-                }
-                else
-                {
-                    splitType = 1;
-                }
+                bool splitVertical = false;
 
+                //split room over longest side
+                if (currentWorkingRoom.width > currentWorkingRoom.height)
+                    splitVertical = true;
+                else
+                    splitVertical = false;
+
+                //split room over the axis that is not yet smaller than maxRoomSize
                 if (rooms[i].width <= maxRoomSize.width && rooms[i].height > maxRoomSize.height)
                 {
-                    splitType = 1;
+                    splitVertical = false;
                 }
-                if (rooms[i].width > maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
+                else if (rooms[i].width > maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
                 {
-                    splitType = 0;
-                }
-                if (rooms[i].width <= maxRoomSize.width && rooms[i].height <= maxRoomSize.height)
-                {
-                    splitType = 3;
+                    splitVertical = true;
                 }
 
-                if (splitType == 0)
+                //split rooms
+                if (splitVertical)
                 {
                     SplitRoomVertically(i);
                     if (!generateInstantly)
-                    yield return new WaitForSeconds(secondsPerOperation);
+                        yield return new WaitForSeconds(secondsPerOperation);
                 }
-                else if (splitType == 1)
+                else
                 {
                     SplitRoomHorizontally(i);
                     if (!generateInstantly)
                         yield return new WaitForSeconds(secondsPerOperation);
                 }
-                else
-                {
-                    newRooms.Add(rooms[i]);
-                    if (!generateInstantly)
-                        yield return new WaitForSeconds(secondsPerOperation);
-                }
             }
+            //set rooms to be split to be the newely generated rooms
             rooms = new List<RectInt>(newRooms);
             newRooms.Clear();
             currentWorkingRoom = new RectInt(0, 0, 0, 0);
-            loops++;
-        }
 
-        Debug.Log("loops: " + loops);
-        if (rooms.Count > 0)
-        {
-            Debug.LogWarning("CreateRooms exceeded max amount of loops");
+            if (generateInstantly)
+                yield return null; //make sure the editor won't hang in an infinite loop
         }
 
         if (!generateInstantly)
             yield return new WaitForSeconds(secondsPerOperation);
 
-        //loop:
+        //loop dungeon room generation (it's cool looking):
         //(Make sure generateInstantly is DISABLED)
         //seed++;
         //ResetDungeon();
@@ -137,21 +125,18 @@ public class DungeonCreator : MonoBehaviour
     void SplitRoomVertically(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int maxSplit = minRoomSize.width;
-        if (currentRoom.width - minRoomSize.width > maxGenerationSize.width)
-        {
-            maxSplit = maxGenerationSize.width;
-        }
-        else
-        {
-            maxSplit = currentRoom.width - minRoomSize.width;
-        }
-        int splitPosition = rng.Next(minRoomSize.width + 2, maxSplit);
-        if (rng.Next(0, 2) == 0)
-        {
-            splitPosition = currentRoom.width - splitPosition;
-        }
+        int maxSplit = currentRoom.width - minRoomSize.width; //the maximum relative position for the room split to occur
 
+        //this check is done to make sure very big rooms can be split in bigger portions
+        //if this wasn't done you would get the rooms to form in an obvious spirally effect
+        if (currentRoom.width - minRoomSize.width > maxGenerationSize.width) 
+            maxSplit = maxGenerationSize.width;
+
+        int splitPosition = rng.Next(minRoomSize.width + 2, maxSplit); //relative position for the split to occur ( + 2 to account for walls)
+        if (rng.Next(0, 2) == 0) //wether relative position is from the left or from the right
+            splitPosition = currentRoom.width - splitPosition;
+
+        //create new rooms
         RectInt newRoomLeft = new RectInt(
             currentRoom.x,
             currentRoom.y,
@@ -165,6 +150,7 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height
             );
 
+        //check wether room is completed or not and add it to corrosponding list
         if (newRoomLeft.width <= maxRoomSize.width && newRoomLeft.height <= maxRoomSize.height)
             completedRooms.Add(newRoomLeft);
         else
@@ -179,21 +165,18 @@ public class DungeonCreator : MonoBehaviour
     void SplitRoomHorizontally(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
-        int maxSplit = minRoomSize.width;
-        if (currentRoom.height - minRoomSize.height > maxGenerationSize.height)
-        {
-            maxSplit = maxGenerationSize.height;
-        }
-        else
-        {
-            maxSplit = currentRoom.height - minRoomSize.height;
-        }
-        int splitPosition = rng.Next(minRoomSize.height + 2, maxSplit);
-        if (rng.Next(0, 2) == 0)
-        {
-            splitPosition = currentRoom.height - splitPosition;
-        }
+        int maxSplit = maxSplit = currentRoom.height - minRoomSize.height; //the maximum relative position for the room split to occur
 
+        //this check is done to make sure very big rooms can be split in bigger portions
+        //if this wasn't done you would get the rooms to form in an obvious spirally effect
+        if (currentRoom.height - minRoomSize.height > maxGenerationSize.height)
+            maxSplit = maxGenerationSize.height;
+
+        int splitPosition = rng.Next(minRoomSize.height + 2, maxSplit); //relative position for the split to occur ( + 2 to account for walls)
+        if (rng.Next(0, 2) == 0) //wether relative position is from the bottom or from up
+            splitPosition = currentRoom.height - splitPosition;
+
+        //create new rooms
         RectInt newRoomBottom = new RectInt(
             currentRoom.x,
             currentRoom.y,
@@ -207,6 +190,7 @@ public class DungeonCreator : MonoBehaviour
             currentRoom.height - splitPosition + 1
             );
 
+        //check wether room is completed or not and add it to corrosponding list
         if (newRoomBottom.width <= maxRoomSize.width && newRoomBottom.height <= maxRoomSize.height)
             completedRooms.Add(newRoomBottom);
         else

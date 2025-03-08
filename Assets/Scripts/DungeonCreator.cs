@@ -1,7 +1,6 @@
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class DungeonCreator : MonoBehaviour
@@ -206,7 +205,16 @@ public class DungeonCreator : MonoBehaviour
 
     IEnumerator CreateGraph()
     {
-        
+        foreach (RectInt room in completedRooms)
+        {
+            roomGraph.AddNode(room);
+            foreach(RectInt edgeRoom in GetIntersectingRooms(room))
+            {
+                roomGraph.AddEdge(room, edgeRoom);
+                //add door if there isn't already one
+            }
+        }
+
         if (!generateInstantly)
             yield return new WaitForSeconds(secondsPerOperation);
     }

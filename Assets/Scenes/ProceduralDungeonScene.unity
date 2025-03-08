@@ -522,9 +522,9 @@ MonoBehaviour:
     y: 0
     width: 5
     height: 5
-  seed: 785632
+  seed: 0
   secondsPerOperation: 0
-  generateInstantly: 0
+  generateInstantly: 1
   rooms: []
   newRooms: []
   completedRooms: []

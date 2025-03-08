@@ -22,6 +22,8 @@ public class DungeonCreator : MonoBehaviour
     RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0); //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
+    Graph<RectInt> roomGraph = new Graph<RectInt>();
+
     void Start()
     {
         ResetDungeon();
@@ -65,6 +67,7 @@ public class DungeonCreator : MonoBehaviour
         AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan); //current room being split
     }
 
+    #region create basic layout (step 1)
     IEnumerator CreateRooms()
     {
         while (rooms.Count > 0) //while there are still rooms to be split
@@ -116,10 +119,8 @@ public class DungeonCreator : MonoBehaviour
         if (!generateInstantly)
             yield return new WaitForSeconds(secondsPerOperation);
 
-        //loop dungeon room generation (it's cool looking):
-        //(Make sure generateInstantly is DISABLED)
-        //seed++;
-        //ResetDungeon();
+        Debug.Log("basic layout generation done");
+        StartCoroutine(CreateGraph());
     }
 
     void SplitRoomVertically(int roomIndex)
@@ -200,5 +201,31 @@ public class DungeonCreator : MonoBehaviour
             completedRooms.Add(newRoomTop);
         else
             newRooms.Add(newRoomTop);
+    }
+    #endregion
+
+    IEnumerator CreateGraph()
+    {
+        
+        if (!generateInstantly)
+            yield return new WaitForSeconds(secondsPerOperation);
+    }
+
+    List<RectInt> GetIntersectingRooms(RectInt currentRoom)
+    {
+        List<RectInt> result = new List<RectInt>();
+
+        foreach(RectInt room in completedRooms)
+        {
+            if (room == currentRoom) continue;
+            if (room.x + room.width < currentRoom.x) continue;
+            if (room.y + room.height < currentRoom.y) continue;
+            if (room.x > currentRoom.x + currentRoom.width) continue;
+            if (room.y > currentRoom.y + currentRoom.height) continue;
+
+            result.Add(room);
+        }
+
+        return result;
     }
 }

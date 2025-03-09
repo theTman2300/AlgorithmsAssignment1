@@ -64,6 +64,17 @@ public class DungeonCreator : MonoBehaviour
             AlgorithmsUtils.DebugRectInt(room, Color.green); //rooms that have been split this loop
         }
         AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan); //current room being split
+
+        //show graph
+        foreach (RectInt room in completedRooms)
+        {
+            Vector3 roomMiddle = new Vector3(room.x + room.width / 2, 0, room.y + room.height / 2);
+            foreach (RectInt connectedRoom in roomGraph.GetNeighbours(room))
+            {
+                Vector3 connectedMiddle = new Vector3(connectedRoom.x + connectedRoom.width / 2, 0, connectedRoom.y + connectedRoom.height / 2);
+                Debug.DrawLine(roomMiddle, connectedMiddle, Color.magenta);
+            }
+        }
     }
 
     #region create basic layout (step 1)
@@ -129,7 +140,7 @@ public class DungeonCreator : MonoBehaviour
 
         //this check is done to make sure very big rooms can be split in bigger portions
         //if this wasn't done you would get the rooms to form in an obvious spirally effect
-        if (currentRoom.width - minRoomSize.width > maxGenerationSize.width) 
+        if (currentRoom.width - minRoomSize.width > maxGenerationSize.width)
             maxSplit = maxGenerationSize.width;
 
         int splitPosition = rng.Next(minRoomSize.width + 2, maxSplit); //relative position for the split to occur ( + 2 to account for walls)
@@ -208,9 +219,11 @@ public class DungeonCreator : MonoBehaviour
         foreach (RectInt room in completedRooms)
         {
             roomGraph.AddNode(room);
-            foreach(RectInt edgeRoom in GetIntersectingRooms(room))
+            foreach (RectInt edgeRoom in GetIntersectingRooms(room))
             {
                 roomGraph.AddEdge(room, edgeRoom);
+                if (!generateInstantly)
+                    yield return new WaitForSeconds(secondsPerOperation);
                 //add door if there isn't already one
             }
         }
@@ -223,7 +236,7 @@ public class DungeonCreator : MonoBehaviour
     {
         List<RectInt> result = new List<RectInt>();
 
-        foreach(RectInt room in completedRooms)
+        foreach (RectInt room in completedRooms)
         {
             if (room == currentRoom) continue;
             if (room.x + room.width < currentRoom.x) continue;

@@ -477,7 +477,7 @@ MonoBehaviour:
     height: 5
   seed: 0
   secondsPerOperation: 0
-  generateInstantly: 1
+  generateInstantly: 0
   rooms: []
   newRooms: []
   completedRooms: []

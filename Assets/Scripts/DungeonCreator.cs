@@ -1,7 +1,9 @@
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class DungeonCreator : MonoBehaviour
 {
@@ -14,14 +16,16 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
     [SerializeField] bool generateInstantly = false;
+    [SerializeField] Transform roomCursor;
     [HorizontalLine]
     [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
     [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
     [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
-    RectInt currentWorkingRoom = new RectInt(0, 0, 0, 0); //current room being split
+    RectInt currentWorkingRoom = default; //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
     Graph<RectInt> roomGraph = new Graph<RectInt>();
+    RectInt selectedRoom = default;
 
     void Start()
     {
@@ -36,6 +40,8 @@ public class DungeonCreator : MonoBehaviour
         newRooms.Clear();
         completedRooms.Clear();
         rooms.Add(dungeonBounds);
+
+        roomGraph.Clear();
 
         //check wether maxGenerationSize is bigger then minimum
         if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
@@ -68,6 +74,8 @@ public class DungeonCreator : MonoBehaviour
         //show graph
         foreach (RectInt room in completedRooms)
         {
+            if (!roomGraph.ContainsKey(room)) continue;
+
             Vector3 roomMiddle = new Vector3(room.x + room.width / 2, 0, room.y + room.height / 2);
             foreach (RectInt connectedRoom in roomGraph.GetNeighbours(room))
             {
@@ -75,6 +83,23 @@ public class DungeonCreator : MonoBehaviour
                 Debug.DrawLine(roomMiddle, connectedMiddle, Color.magenta);
             }
         }
+
+        //room cusror
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (selectedRoom == default || selectedRoom != FindRoomAtPosition(roomCursor.position))
+            {
+                selectedRoom = FindRoomAtPosition(roomCursor.position);
+                Debug.Log("Selected Room " + selectedRoom);
+                roomGraph.PrintNeigbours(selectedRoom);
+            }
+            else
+            {
+                selectedRoom = default;
+            }
+        }
+        AlgorithmsUtils.DebugRectInt(selectedRoom, Color.red);
+
     }
 
     #region create basic layout (step 1)
@@ -219,6 +244,11 @@ public class DungeonCreator : MonoBehaviour
         foreach (RectInt room in completedRooms)
         {
             roomGraph.AddNode(room);
+        }
+
+        //second loop because edges cannot be made until all nodes are in graph
+        foreach (RectInt room in completedRooms)
+        {
             foreach (RectInt edgeRoom in GetIntersectingRooms(room))
             {
                 roomGraph.AddEdge(room, edgeRoom);
@@ -230,23 +260,47 @@ public class DungeonCreator : MonoBehaviour
 
         if (!generateInstantly)
             yield return new WaitForSeconds(secondsPerOperation);
+
+        Debug.Log("Graph creation done");
     }
 
     List<RectInt> GetIntersectingRooms(RectInt currentRoom)
     {
         List<RectInt> result = new List<RectInt>();
-
+        int minDoorOverlap = 4; //the minimum overlap to make an edge between the rooms
+        minDoorOverlap += 2; //to take into account the walls
         foreach (RectInt room in completedRooms)
         {
+            //xMax = x + width
             if (room == currentRoom) continue;
-            if (room.x + room.width < currentRoom.x) continue;
-            if (room.y + room.height < currentRoom.y) continue;
-            if (room.x > currentRoom.x + currentRoom.width) continue;
-            if (room.y > currentRoom.y + currentRoom.height) continue;
+            if (room.xMax <= currentRoom.x) continue;
+            if (room.yMax <= currentRoom.y) continue;
+            if (room.x >= currentRoom.xMax) continue;
+            if (room.y >= currentRoom.yMax) continue;
 
-            result.Add(room);
+            int overlapX = room.x < currentRoom.x ? overlapX = room.xMax - currentRoom.x : overlapX = currentRoom.xMax - room.x;
+            int overlapY = room.y < currentRoom.y ? overlapY = room.yMax - currentRoom.y : overlapY = currentRoom.yMax - room.y;
+            if (overlapX >= minDoorOverlap || overlapY >= minDoorOverlap)
+            {
+                result.Add(room);
+            }
+
         }
 
         return result;
+    }
+
+    RectInt FindRoomAtPosition(Vector3 position)
+    {
+        foreach (RectInt room in completedRooms)
+        {
+            if (room.x + room.width < position.x) continue;
+            if (room.y + room.height < position.z) continue;
+            if (room.x > position.x) continue;
+            if (room.y > position.z) continue;
+
+            return room;
+        }
+        return default;
     }
 }

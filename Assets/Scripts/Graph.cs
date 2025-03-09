@@ -20,7 +20,7 @@ public class Graph<T>
 
     /// <summary>
     /// Add fromNode and toNode to eaach others list.
-    /// This creates an edge between the 2 inputs
+    /// This creates an edge between the 2 inputs.
     /// </summary>
     public void AddEdge(T fromNode, T toNode)
     {
@@ -30,7 +30,7 @@ public class Graph<T>
             return;
         }
         adjacencyList[fromNode].Add(toNode);
-        adjacencyList[toNode].Add(fromNode);
+        //adjacencyList[toNode].Add(fromNode);
     }
 
     public List<T> GetNeighbours(T node)
@@ -41,5 +41,26 @@ public class Graph<T>
             return new List<T>(); //return an empty list with no neighbours
         }
         return adjacencyList[node];
+    }
+
+    public void PrintNeigbours(T node)
+    {
+        foreach (T neigbourNode in GetNeighbours(node))
+        {
+            Debug.Log(neigbourNode);
+        }
+    }
+
+    /// <summary>
+    /// Clears the graph.
+    /// </summary>
+    public void Clear()
+    {
+        adjacencyList.Clear();
+    }
+
+    public bool ContainsKey(T node)
+    {
+        return adjacencyList.ContainsKey(node);
     }
 }

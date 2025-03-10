@@ -15,7 +15,7 @@ public class DungeonCreator : MonoBehaviour
     [HorizontalLine]
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
-    [SerializeField] bool generateInstantly = false;
+    [SerializeField] bool generateFast = false;
     [SerializeField] Transform roomCursor;
     [HorizontalLine]
     [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
@@ -132,13 +132,13 @@ public class DungeonCreator : MonoBehaviour
                 if (splitVertical)
                 {
                     SplitRoomVertically(i);
-                    if (!generateInstantly)
+                    if (!generateFast)
                         yield return new WaitForSeconds(secondsPerOperation);
                 }
                 else
                 {
                     SplitRoomHorizontally(i);
-                    if (!generateInstantly)
+                    if (!generateFast)
                         yield return new WaitForSeconds(secondsPerOperation);
                 }
             }
@@ -147,11 +147,11 @@ public class DungeonCreator : MonoBehaviour
             newRooms.Clear();
             currentWorkingRoom = new RectInt(0, 0, 0, 0);
 
-            if (generateInstantly)
+            if (generateFast)
                 yield return null; //make sure the editor won't hang in an infinite loop
         }
 
-        if (!generateInstantly)
+        if (!generateFast)
             yield return new WaitForSeconds(secondsPerOperation);
 
         Debug.Log("basic layout generation done");
@@ -252,13 +252,14 @@ public class DungeonCreator : MonoBehaviour
             foreach (RectInt edgeRoom in GetIntersectingRooms(room))
             {
                 roomGraph.AddEdge(room, edgeRoom);
-                if (!generateInstantly)
-                    yield return new WaitForSeconds(secondsPerOperation);
                 //add door if there isn't already one
             }
+
+            if (!generateFast)
+                yield return new WaitForSeconds(secondsPerOperation);
         }
 
-        if (!generateInstantly)
+        if (!generateFast)
             yield return new WaitForSeconds(secondsPerOperation);
 
         Debug.Log("Graph creation done");

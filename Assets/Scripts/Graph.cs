@@ -33,21 +33,21 @@ public class Graph<T>
         //adjacencyList[toNode].Add(fromNode);
     }
 
-    public List<T> GetNeighbours(T node)
+    public List<T> GetEdgeNodes(T node)
     {
         if ( ! adjacencyList.ContainsKey(node))
         {
             Debug.Log("Node does not excist in graph");
-            return new List<T>(); //return an empty list with no neighbours
+            return new List<T>(); //return an empty list with no edge nodes
         }
         return adjacencyList[node];
     }
 
-    public void PrintNeigbours(T node)
+    public void PrintEdgeNodes(T node)
     {
-        foreach (T neigbourNode in GetNeighbours(node))
+        foreach (T edgeNode in GetEdgeNodes(node))
         {
-            Debug.Log(neigbourNode);
+            Debug.Log(edgeNode);
         }
     }
 
@@ -62,5 +62,10 @@ public class Graph<T>
     public bool ContainsKey(T node)
     {
         return adjacencyList.ContainsKey(node);
+    }
+
+    public bool NodeContainsEdgeNode(T node, T edgeNode)
+    {
+        return adjacencyList[node].Contains(edgeNode);
     }
 }

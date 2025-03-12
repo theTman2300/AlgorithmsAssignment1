@@ -23,7 +23,7 @@ public class GraphTester : MonoBehaviour
     [Button]
     void PrintNeigbours()
     {
-        foreach (string node in nodeGraph.GetNeighbours(currentNode))
+        foreach (string node in nodeGraph.GetEdgeNodes(currentNode))
         {
             print(node);
         }

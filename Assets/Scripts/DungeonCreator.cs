@@ -15,7 +15,6 @@ public class DungeonCreator : MonoBehaviour
     [Tooltip("the minimum overlap to make an edge between the rooms")]
     [SerializeField] int minDoorOverlap = 4;
     [SerializeField] int doorWidth;
-    [SerializeField] bool useDFS = true;
     [HorizontalLine]
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
@@ -157,16 +156,13 @@ public class DungeonCreator : MonoBehaviour
             rooms = new List<RectInt>(newRooms);
             newRooms.Clear();
             currentWorkingRoom = default;
-
-            if (generateFast)
-                yield return null; //make sure the editor won't hang in an infinite loop
         }
 
         if (!generateFast)
             yield return new WaitForSeconds(secondsPerOperation);
 
         Debug.Log("basic layout generation done");
-        CreateGraph();
+        StartCoroutine(CreateGraph());
     }
 
     void SplitRoomVertically(int roomIndex)
@@ -250,40 +246,38 @@ public class DungeonCreator : MonoBehaviour
     }
     #endregion
 
-    void CreateGraph()
+    #region room removal, graph creation and door creation (step 2)
+    IEnumerator CreateGraph()
     {
+        //sort rooms by smallest area
         completedRooms = new(completedRooms.OrderBy(room => room.width * room.height));
-        SetRoomGraph();
+        SetRoomGraph(); //set nodes and edges
 
-        //for (int i = 0; i < completedRooms.Count * .1f; i++)
-        //{
-        //    RectInt roomToRemove = completedRooms[0];
-        //    completedRooms.RemoveAt(0);
-        //    SetRoomGraph();
+        //remove 10% of smallest rooms
+        for (int i = 0; i < completedRooms.Count * .1f; i++)
+        {
+            RectInt roomToRemove = completedRooms[0];
+            completedRooms.RemoveAt(0);
+            SetRoomGraph(); //set all the current nodes and edges after removing a room
 
-        //    bool roomsAreReachable = false;
+            bool roomsAreReachable = false;
+            roomsAreReachable = roomGraph.DFS(completedRooms[0]);
 
-        //    if (useDFS)
-        //        roomsAreReachable = roomGraph.DFS(completedRooms[0]);
-        //    else
-        //        roomsAreReachable = roomGraph.BFS(completedRooms[0]);
+            if (!generateFast)
+                yield return new WaitForSeconds(secondsPerOperation);
 
-        //    if (!roomsAreReachable)
-        //    {
-        //        completedRooms.Insert(0, roomToRemove);
-        //        roomGraph.AddNode(roomToRemove);
-        //        Debug.Log("Not all rooms are reachable");
-        //        break;
-        //    }
-        //}
-        //Debug.Log("Rooms were all reachable");
-        //SetRoomGraph();
+            if (!roomsAreReachable)
+            {
+                completedRooms.Insert(0, roomToRemove);
+                roomGraph.AddNode(roomToRemove);
+                SetRoomGraph();
+                Debug.Log("Not all rooms are reachable, exited room removal early");
+                break;
+            }
+        }
 
-        Debug.Log(completedRooms[0]);
-        if (useDFS)
-            Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0]));
-        else
-            Debug.Log("All rooms reachable BFS: " + roomGraph.BFS(completedRooms[0]));
+        Debug.Log(completedRooms[0]); //log where dfs starts
+        Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0])); //last graph check
 
         StartCoroutine(CreateDoors());
 
@@ -363,6 +357,8 @@ public class DungeonCreator : MonoBehaviour
 
         return result;
     }
+
+    #endregion
 
     RectInt FindRoomAtPosition(Vector3 position)
     {

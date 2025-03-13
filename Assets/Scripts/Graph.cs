@@ -75,37 +75,36 @@ public class Graph<T>
         return new List<T>(adjacencyList.Keys);
     }
 
-    public bool BFS(T startNode) //breadth first search
-    {
-        //Note: this creates a directional graph
-        Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
-        List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
-        Queue<T> bfsQueue = new(); //using a queue because otherwise I would have to constantly shift values in an array and I'm not using a list because I am always using the value at the end anyway
-        bfsQueue.Enqueue(startNode);
+    //public bool BFS(T startNode) //breadth first search
+    //{
+    //    //Note: this creates a directional graph
+    //    Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
+    //    List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
+    //    Queue<T> bfsQueue = new(); //using a queue because otherwise I would have to constantly shift values in an array and I'm not using a list because I am always using the value at the end anyway
+    //    bfsQueue.Enqueue(startNode);
 
-        visited.Add(startNode);
-        while (bfsQueue.Count != 0)
-        {
-            T node = bfsQueue.Dequeue();
-            tempGraph[node] = new();
-            foreach (T edgeNode in adjacencyList[node])
-            {
-                if (!visited.Contains(edgeNode))
-                {
-                    bfsQueue.Enqueue(edgeNode);
-                    visited.Add(edgeNode);
-                    tempGraph[node].Add(edgeNode);
-                }
-            }
-        }
-        bool result = adjacencyList.Count == tempGraph.Count;
-        adjacencyList = tempGraph;
-        return result;
-    }
+    //    visited.Add(startNode);
+    //    while (bfsQueue.Count != 0)
+    //    {
+    //        T node = bfsQueue.Dequeue();
+    //        tempGraph[node] = new();
+    //        foreach (T edgeNode in adjacencyList[node])
+    //        {
+    //            if (!visited.Contains(edgeNode))
+    //            {
+    //                bfsQueue.Enqueue(edgeNode);
+    //                visited.Add(edgeNode);
+    //                tempGraph[node].Add(edgeNode);
+    //            }
+    //        }
+    //    }
+    //    bool result = adjacencyList.Count == tempGraph.Count;
+    //    adjacencyList = tempGraph;
+    //    return result;
+    //}
 
     public bool DFS(T startNode) //Depth First Search
     {
-        int nodeNr = 0;
         //Note: this creates a directional graph
         Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
         List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
@@ -118,7 +117,8 @@ public class Graph<T>
             if (!visited.Contains(node))
             {
                 visited.Add(node);
-                tempGraph[node] = new List<T>(); //add node in dictionary
+                if (!tempGraph.Keys.Contains(node)) //add node in dictionary if it does NOT exist already
+                    tempGraph[node] = new List<T>(); 
                 foreach (T edgeNode in adjacencyList[node])
                 {
                     if (!visited.Contains(edgeNode))
@@ -126,7 +126,8 @@ public class Graph<T>
                         if(!dfsStack.Contains(edgeNode))
                         {
                             tempGraph[node].Add(edgeNode);
-                            if (!tempGraph.Keys.Contains(edgeNode))
+
+                            if (!tempGraph.Keys.Contains(edgeNode)) //add edgeNode in dictionary if it does NOT exist already
                                 tempGraph[edgeNode] = new();
                             tempGraph[edgeNode].Add(node);
                         }

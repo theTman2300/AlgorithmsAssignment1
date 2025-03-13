@@ -508,10 +508,9 @@ MonoBehaviour:
     height: 5
   minDoorOverlap: 4
   doorWidth: 2
-  useDFS: 1
   seed: 984561
   secondsPerOperation: 0
-  generateFast: 1
+  generateFast: 0
   roomCursor: {fileID: 470763399}
   rooms:
   - x: 0

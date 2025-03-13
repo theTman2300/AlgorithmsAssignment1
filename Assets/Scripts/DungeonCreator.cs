@@ -278,10 +278,8 @@ public class DungeonCreator : MonoBehaviour
 
         Debug.Log(completedRooms[0]); //log where dfs starts
         Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0])); //last graph check
-
-        StartCoroutine(CreateDoors());
-
         Debug.Log("Graph creation done");
+        StartCoroutine(CreateDoors());
     }
 
     void SetRoomGraph()
@@ -333,6 +331,8 @@ public class DungeonCreator : MonoBehaviour
             if (!generateFast)
                 yield return new WaitForSeconds(secondsPerOperation);
         }
+
+        Debug.Log("Door creation done");
     }
 
     List<RectInt> GetIntersectingRooms(RectInt currentRoom)

@@ -1,9 +1,9 @@
+using JetBrains.Annotations;
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using System.Linq;
 using UnityEngine;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class DungeonCreator : MonoBehaviour
 {
@@ -15,6 +15,7 @@ public class DungeonCreator : MonoBehaviour
     [Tooltip("the minimum overlap to make an edge between the rooms")]
     [SerializeField] int minDoorOverlap = 4;
     [SerializeField] int doorWidth;
+    [SerializeField] bool useDFS = true;
     [HorizontalLine]
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
@@ -43,10 +44,11 @@ public class DungeonCreator : MonoBehaviour
         rooms.Clear();
         newRooms.Clear();
         completedRooms.Clear();
-        doors.Clear();
-        rooms.Add(dungeonBounds);
-
         roomGraph.Clear();
+        doors.Clear();
+        selectedRoom = default;
+
+        rooms.Add(dungeonBounds);
 
         //check wether maxGenerationSize is bigger then minimum
         if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
@@ -154,7 +156,7 @@ public class DungeonCreator : MonoBehaviour
             //set rooms to be split to be the newely generated rooms
             rooms = new List<RectInt>(newRooms);
             newRooms.Clear();
-            currentWorkingRoom = new RectInt(0, 0, 0, 0);
+            currentWorkingRoom = default;
 
             if (generateFast)
                 yield return null; //make sure the editor won't hang in an infinite loop
@@ -164,7 +166,7 @@ public class DungeonCreator : MonoBehaviour
             yield return new WaitForSeconds(secondsPerOperation);
 
         Debug.Log("basic layout generation done");
-        StartCoroutine(CreateGraph());
+        CreateGraph();
     }
 
     void SplitRoomVertically(int roomIndex)
@@ -248,47 +250,75 @@ public class DungeonCreator : MonoBehaviour
     }
     #endregion
 
-    IEnumerator CreateGraph()
+    void CreateGraph()
     {
-        foreach (RectInt room in completedRooms)
+        completedRooms = new(completedRooms.OrderBy(room => room.width * room.height));
+        SetRoomGraph();
+
+        //for (int i = 0; i < completedRooms.Count * .1f; i++)
+        //{
+        //    RectInt roomToRemove = completedRooms[0];
+        //    completedRooms.RemoveAt(0);
+        //    SetRoomGraph();
+
+        //    bool roomsAreReachable = false;
+
+        //    if (useDFS)
+        //        roomsAreReachable = roomGraph.DFS(completedRooms[0]);
+        //    else
+        //        roomsAreReachable = roomGraph.BFS(completedRooms[0]);
+
+        //    if (!roomsAreReachable)
+        //    {
+        //        completedRooms.Insert(0, roomToRemove);
+        //        roomGraph.AddNode(roomToRemove);
+        //        Debug.Log("Not all rooms are reachable");
+        //        break;
+        //    }
+        //}
+        //Debug.Log("Rooms were all reachable");
+        //SetRoomGraph();
+
+        Debug.Log(completedRooms[0]);
+        if (useDFS)
+            Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0]));
+        else
+            Debug.Log("All rooms reachable BFS: " + roomGraph.BFS(completedRooms[0]));
+
+        StartCoroutine(CreateDoors());
+
+        Debug.Log("Graph creation done");
+    }
+
+    void SetRoomGraph()
+    {
+        roomGraph.Clear();
+        foreach (RectInt room in completedRooms) //add nodes
         {
             roomGraph.AddNode(room);
         }
-
-        //second loop because edges cannot be made until all nodes are in graph
         foreach (RectInt room in completedRooms)
         {
-            foreach (RectInt edgeNode in completedRooms)
+            foreach (RectInt edgeNode in GetIntersectingRooms(room))
             {
-                //add edge nodes
-                if (edgeNode == room) continue;
-                if (edgeNode.xMax <= room.x) continue;
-                if (edgeNode.yMax <= room.y) continue;
-                if (edgeNode.x >= room.xMax) continue;
-                if (edgeNode.y >= room.yMax) continue;
+                roomGraph.AddEdge(room, edgeNode);
+            }
+        }
+    }
 
-                //correct minDoorOverlap for walls and take edge of dungeon into account
-                int minOverlap = minDoorOverlap;
-                if (edgeNode.x == 0 && room.x == 0 || edgeNode.xMax == dungeonBounds.xMax && room.xMax == dungeonBounds.xMax)
-                    minOverlap++;
-                else if (edgeNode.y == 0 && room.y == 0 || edgeNode.yMax == dungeonBounds.yMax && room.yMax == dungeonBounds.yMax)
-                    minOverlap++;
-                else
-                    minOverlap += 2;
+    IEnumerator CreateDoors()
+    {
+        List<RectInt> roomsWithDoor = new();
+        foreach (RectInt room in roomGraph.GetKeys()) //using getkeys to go in direction of the graph, otherwise there would be doors that don't generate
+        {
+            roomsWithDoor.Add(room);
+            foreach (RectInt edgeNode in roomGraph.GetEdgeNodes(room))
+            {
+                //check if door already exists
+                if (roomsWithDoor.Contains(edgeNode)) continue;
 
-                //it isn't the prettiest, but it works
                 int overlapX = edgeNode.x < room.x ? edgeNode.xMax - room.x : edgeNode.x == room.x ? (edgeNode.xMax < room.xMax ? edgeNode.xMax - room.x : room.xMax - edgeNode.x) : room.xMax - edgeNode.x;
                 int overlapY = edgeNode.y < room.y ? edgeNode.yMax - room.y : edgeNode.y == room.y ? (edgeNode.yMax < room.yMax ? edgeNode.yMax - room.y : room.yMax - edgeNode.y) : room.yMax - edgeNode.y;
-                if (overlapX >= minOverlap || overlapY >= minOverlap) // + 2 to take into account the thickness of walls
-                {
-                    roomGraph.AddEdge(room, edgeNode);
-                }
-
-                //add door if there isn't already one
-                if (!roomGraph.NodeContainsEdgeNode(edgeNode, room)) //check if room has current room as edge, if so then door already exists.
-                    continue;
-
-                //biggest of the 2 overlap axis is the one where the door is placed
                 if (overlapX > overlapY)
                 {
                     RectInt door = new(0, 0, doorWidth, 1);
@@ -306,16 +336,32 @@ public class DungeonCreator : MonoBehaviour
                     doors.Add(door);
                 }
             }
-
-
             if (!generateFast)
                 yield return new WaitForSeconds(secondsPerOperation);
         }
+    }
 
-        if (!generateFast)
-            yield return new WaitForSeconds(secondsPerOperation);
+    List<RectInt> GetIntersectingRooms(RectInt currentRoom)
+    {
+        List<RectInt> result = new List<RectInt>();
+        foreach (RectInt edgeNode in completedRooms)
+        {
+            //xMax = x + width
+            if (edgeNode == currentRoom) continue;
+            if (edgeNode.xMax <= currentRoom.x) continue;
+            if (edgeNode.yMax <= currentRoom.y) continue;
+            if (edgeNode.x >= currentRoom.xMax) continue;
+            if (edgeNode.y >= currentRoom.yMax) continue;
 
-        Debug.Log("Graph creation done");
+            int overlapX = edgeNode.x < currentRoom.x ? overlapX = edgeNode.xMax - currentRoom.x : overlapX = currentRoom.xMax - edgeNode.x;
+            int overlapY = edgeNode.y < currentRoom.y ? overlapY = edgeNode.yMax - currentRoom.y : overlapY = currentRoom.yMax - edgeNode.y;
+            if (overlapX >= minDoorOverlap + 2 || overlapY >= minDoorOverlap + 2) // + 2 to take into account the thickness of walls
+            {
+                result.Add(edgeNode);
+            }
+        }
+
+        return result;
     }
 
     RectInt FindRoomAtPosition(Vector3 position)
@@ -332,27 +378,4 @@ public class DungeonCreator : MonoBehaviour
         return default;
     }
 
-    //List<RectInt> GetIntersectingRooms(RectInt currentRoom)
-    //{
-    //    List<RectInt> result = new List<RectInt>();
-    //    foreach (RectInt edgeNode in completedRooms)
-    //    {
-    //        //xMax = x + width
-    //        if (edgeNode == currentRoom) continue;
-    //        if (edgeNode.xMax <= currentRoom.x) continue;
-    //        if (edgeNode.yMax <= currentRoom.y) continue;
-    //        if (edgeNode.x >= currentRoom.xMax) continue;
-    //        if (edgeNode.y >= currentRoom.yMax) continue;
-
-    //        int overlapX = edgeNode.x < currentRoom.x ? overlapX = edgeNode.xMax - currentRoom.x : overlapX = currentRoom.xMax - edgeNode.x;
-    //        int overlapY = edgeNode.y < currentRoom.y ? overlapY = edgeNode.yMax - currentRoom.y : overlapY = currentRoom.yMax - edgeNode.y;
-    //        if (overlapX >= minDoorOverlap + 2 || overlapY >= minDoorOverlap + 2) // + 2 to take into account the thickness of walls
-    //        {
-    //            result.Add(edgeNode);
-    //        }
-
-    //    }
-
-    //    return result;
-    //}
 }

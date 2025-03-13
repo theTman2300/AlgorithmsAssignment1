@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ public class Graph<T>
     /// </summary>
     public void AddNode(T node)
     {
-        if ( ! adjacencyList.ContainsKey(node))
+        if (!adjacencyList.ContainsKey(node))
         {
             adjacencyList[node] = new List<T>();
         }
@@ -24,7 +25,7 @@ public class Graph<T>
     /// </summary>
     public void AddEdge(T fromNode, T toNode)
     {
-        if ( ! adjacencyList.ContainsKey(fromNode) || ! adjacencyList.ContainsKey(toNode))
+        if (!adjacencyList.ContainsKey(fromNode) || !adjacencyList.ContainsKey(toNode))
         {
             Debug.Log("One or both nodes do not exist in the graph.");
             return;
@@ -35,7 +36,7 @@ public class Graph<T>
 
     public List<T> GetEdgeNodes(T node)
     {
-        if ( ! adjacencyList.ContainsKey(node))
+        if (!adjacencyList.ContainsKey(node))
         {
             Debug.Log("Node does not excist in graph");
             return new List<T>(); //return an empty list with no edge nodes
@@ -67,5 +68,76 @@ public class Graph<T>
     public bool NodeContainsEdgeNode(T node, T edgeNode)
     {
         return adjacencyList[node].Contains(edgeNode);
+    }
+
+    public List<T> GetKeys()
+    {
+        return new List<T>(adjacencyList.Keys);
+    }
+
+    public bool BFS(T startNode) //breadth first search
+    {
+        //Note: this creates a directional graph
+        Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
+        List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
+        Queue<T> bfsQueue = new(); //using a queue because otherwise I would have to constantly shift values in an array and I'm not using a list because I am always using the value at the end anyway
+        bfsQueue.Enqueue(startNode);
+
+        visited.Add(startNode);
+        while (bfsQueue.Count != 0)
+        {
+            T node = bfsQueue.Dequeue();
+            tempGraph[node] = new();
+            foreach (T edgeNode in adjacencyList[node])
+            {
+                if (!visited.Contains(edgeNode))
+                {
+                    bfsQueue.Enqueue(edgeNode);
+                    visited.Add(edgeNode);
+                    tempGraph[node].Add(edgeNode);
+                }
+            }
+        }
+        bool result = adjacencyList.Count == tempGraph.Count;
+        adjacencyList = tempGraph;
+        return result;
+    }
+
+    public bool DFS(T startNode) //Depth First Search
+    {
+        int nodeNr = 0;
+        //Note: this creates a directional graph
+        Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
+        List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
+        Stack<T> dfsStack = new(); //using a stack instead of a queue, because it is last in first out so i get actual depth first search
+        dfsStack.Push(startNode);
+
+        while (dfsStack.Count != 0)
+        {
+            T node = dfsStack.Pop();
+            if (!visited.Contains(node))
+            {
+                visited.Add(node);
+                tempGraph[node] = new List<T>(); //add node in dictionary
+                foreach (T edgeNode in adjacencyList[node])
+                {
+                    if (!visited.Contains(edgeNode))
+                    {
+                        if(!dfsStack.Contains(edgeNode))
+                        {
+                            tempGraph[node].Add(edgeNode);
+                            if (!tempGraph.Keys.Contains(edgeNode))
+                                tempGraph[edgeNode] = new();
+                            tempGraph[edgeNode].Add(node);
+                        }
+                        dfsStack.Push(edgeNode);
+                    }
+                }
+            }
+        }
+
+        bool result = adjacencyList.Count == tempGraph.Count;
+        adjacencyList = new(tempGraph);
+        return result;
     }
 }

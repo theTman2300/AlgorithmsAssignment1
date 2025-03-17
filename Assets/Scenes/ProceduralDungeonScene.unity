@@ -507,7 +507,7 @@ MonoBehaviour:
     width: 5
     height: 5
   minDoorOverlap: 4
-  doorWidth: 2
+  doorLength: 2
   seed: 984561
   secondsPerOperation: 0
   generateFast: 0

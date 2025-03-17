@@ -7,20 +7,45 @@ using UnityEngine;
 
 public class DungeonCreator : MonoBehaviour
 {
+    [Tooltip("The size of the outer bounds of the dungeon.")]
     [SerializeField] RectInt dungeonBounds;
-    [Tooltip("Used to avoid spiral pattern when creating larger dungeons \n Must alway be bigger then minSize + 2, but reccomended to be somewhere around 3/4 of dungeonBounds")]
+    //even though only width and height are only taken into account, I still use RectInt instead of Vector2Int because is think it looks better when it actually says width and height in the inspector
+    [Tooltip("Used to avoid spiral pattern when creating larger dungeons. \nMust always be bigger then minSize + 2, but recommended to be somewhere around 3/4 of dungeonBounds. \nOnly width and height are taken into account.")]
     [SerializeField] RectInt maxGenerationSize;
+    [Tooltip("Rooms will always be smaller then this value. \nOnly width and height are taken into account.")]
     [SerializeField] RectInt maxRoomSize;
+    [Tooltip("Rooms will always be larger then this value. \nOnly width and height are taken into account.")]
     [SerializeField] RectInt minRoomSize;
-    [Tooltip("the minimum overlap to make an edge between the rooms")]
+    [Tooltip("the minimum overlap to make a graph edge between the rooms.")] //both x and y axis use this vale
     [SerializeField] int minDoorOverlap = 4;
-    [SerializeField] int doorWidth;
+    [SerializeField] int doorLength;
+
     [HorizontalLine]
     [SerializeField] int seed = 0;
     [SerializeField] float secondsPerOperation = .5f;
+    [Tooltip("Skip the animation to generate the rooms as fast as possible")]
     [SerializeField] bool generateFast = false;
+    [Tooltip("This is reserved for any gameObject to more easily debug rooms.")]
     [SerializeField] Transform roomCursor;
+    [Tooltip("Highlights and prints the location of the room, also prints all it's edge nodes.")]
+    [Button]
+    void SelectRoomWithCursor()
+    {
+
+        if (selectedRoom == default || selectedRoom != FindRoomAtPosition(roomCursor.position))
+        {
+            selectedRoom = FindRoomAtPosition(roomCursor.position);
+            Debug.Log("Selected Room " + selectedRoom);
+            roomGraph.PrintEdgeNodes(selectedRoom);
+        }
+        else
+        {
+            selectedRoom = default;
+        }
+    }
+
     [HorizontalLine]
+    [Header("Read Only")]
     [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
     [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
     [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
@@ -29,7 +54,7 @@ public class DungeonCreator : MonoBehaviour
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
     Graph<RectInt> roomGraph = new Graph<RectInt>();
-    RectInt selectedRoom = default;
+    RectInt selectedRoom = default; //used by roomCursor
 
     void Start()
     {
@@ -37,6 +62,9 @@ public class DungeonCreator : MonoBehaviour
     }
 
     [Button]
+    /// <summary>
+    /// Clears the previous dungeon and restarts the generation process with the current settings.
+    /// </summary>
     private void ResetDungeon()
     {
         StopAllCoroutines(); //in event that dungeon generator was still running when this function is called
@@ -49,7 +77,7 @@ public class DungeonCreator : MonoBehaviour
 
         rooms.Add(dungeonBounds);
 
-        //check wether maxGenerationSize is bigger then minimum
+        //check whether maxGenerationSize is bigger then minimum
         if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
         {
             Debug.LogError("MaxGenerationSize is smaller then minimum of width: " + (minRoomSize.width + 2) + " and height: " + (minRoomSize.height + 2));
@@ -80,7 +108,7 @@ public class DungeonCreator : MonoBehaviour
         //show graph
         foreach (RectInt room in completedRooms)
         {
-            if (!roomGraph.ContainsKey(room)) continue;
+            if (!roomGraph.ContainsNode(room)) continue;
 
             Vector3 roomMiddle = new Vector3(room.x + room.width / 2, 0, room.y + room.height / 2);
             foreach (RectInt connectedRoom in roomGraph.GetEdgeNodes(room))
@@ -94,25 +122,15 @@ public class DungeonCreator : MonoBehaviour
             AlgorithmsUtils.DebugRectInt(door, Color.cyan);
         }
 
-        //room cusror
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (selectedRoom == default || selectedRoom != FindRoomAtPosition(roomCursor.position))
-            {
-                selectedRoom = FindRoomAtPosition(roomCursor.position);
-                Debug.Log("Selected Room " + selectedRoom);
-                roomGraph.PrintEdgeNodes(selectedRoom);
-            }
-            else
-            {
-                selectedRoom = default;
-            }
-        }
+        //room cursor
         AlgorithmsUtils.DebugRectInt(selectedRoom, Color.red);
 
     }
 
     #region create basic layout (step 1)
+    /// <summary>
+    /// Splits the dungeon bounds into rooms according to the current settings.
+    /// </summary>
     IEnumerator CreateRooms()
     {
         while (rooms.Count > 0) //while there are still rooms to be split
@@ -162,9 +180,13 @@ public class DungeonCreator : MonoBehaviour
             yield return new WaitForSeconds(secondsPerOperation);
 
         Debug.Log("basic layout generation done");
-        StartCoroutine(CreateGraph());
+        StartCoroutine(FinalizeDungeonLayout());
     }
 
+    /// <summary>
+    /// Splits a room along the vertical axis.
+    /// </summary>
+    /// <param name="roomIndex">Index of the room to split in the list rooms[]</param>
     void SplitRoomVertically(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
@@ -205,6 +227,10 @@ public class DungeonCreator : MonoBehaviour
             newRooms.Add(newRoomRight);
     }
 
+    /// <summary>
+    /// Splits a room along the horizontal axis.
+    /// </summary>
+    /// <param name="roomIndex">Index of the room to split in the list rooms[]</param>
     void SplitRoomHorizontally(int roomIndex)
     {
         RectInt currentRoom = rooms[roomIndex];
@@ -247,21 +273,23 @@ public class DungeonCreator : MonoBehaviour
     #endregion
 
     #region room removal, graph creation and door creation (step 2)
-    IEnumerator CreateGraph()
+    /// <summary>
+    /// Removes 10% of the smallest rooms if possible, then create connections between rooms without loops.
+    /// </summary>
+    IEnumerator FinalizeDungeonLayout()
     {
         //sort rooms by smallest area
         completedRooms = new(completedRooms.OrderBy(room => room.width * room.height));
-        SetRoomGraph(); //set nodes and edges
+        SetRoomGraph();
 
         //remove 10% of smallest rooms
         for (int i = 0; i < completedRooms.Count * .1f; i++)
         {
             RectInt roomToRemove = completedRooms[0];
             completedRooms.RemoveAt(0);
-            SetRoomGraph(); //set all the current nodes and edges after removing a room
 
             bool roomsAreReachable = false;
-            roomsAreReachable = roomGraph.DFS(completedRooms[0]);
+            roomsAreReachable = roomGraph.DFS(completedRooms[0], false);
 
             if (!generateFast)
                 yield return new WaitForSeconds(secondsPerOperation);
@@ -275,13 +303,17 @@ public class DungeonCreator : MonoBehaviour
                 break;
             }
         }
+        SetRoomGraph(); //set all the new nodes and edges after removal to make sure dfs is able to create the correct graph
 
         Debug.Log(completedRooms[0]); //log where dfs starts
-        Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0])); //last graph check
+        Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0], true)); //last graph check, should always return true
         Debug.Log("Graph creation done");
         StartCoroutine(CreateDoors());
     }
 
+    /// <summary>
+    /// Sets all the nodes and edges of those nodes in a graph.
+    /// </summary>
     void SetRoomGraph()
     {
         roomGraph.Clear();
@@ -298,33 +330,43 @@ public class DungeonCreator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Creates all the doors on all the node edges.
+    /// </summary>
     IEnumerator CreateDoors()
     {
         List<RectInt> roomsWithDoor = new();
-        foreach (RectInt room in roomGraph.GetKeys()) //using getkeys to go in direction of the graph, otherwise there would be doors that don't generate
+        foreach (RectInt room in roomGraph.GetKeys()) //using GetKeys to go in direction of the graph, otherwise there would be doors that don't generate
         {
-            roomsWithDoor.Add(room);
+            roomsWithDoor.Add(room); //keep track of doors that have already been added
             foreach (RectInt edgeNode in roomGraph.GetEdgeNodes(room))
             {
                 //check if door already exists
                 if (roomsWithDoor.Contains(edgeNode)) continue;
 
+                //get the amount of units overlap between the current room and it's edge on their respective axis
+                //there are 3 cases here: edgeNode.x < room.x, edgeNode.x == room.x and edgeNode.xMax < room.xMax
                 int overlapX = edgeNode.x < room.x ? edgeNode.xMax - room.x : edgeNode.x == room.x ? (edgeNode.xMax < room.xMax ? edgeNode.xMax - room.x : room.xMax - edgeNode.x) : room.xMax - edgeNode.x;
                 int overlapY = edgeNode.y < room.y ? edgeNode.yMax - room.y : edgeNode.y == room.y ? (edgeNode.yMax < room.yMax ? edgeNode.yMax - room.y : room.yMax - edgeNode.y) : room.yMax - edgeNode.y;
+
                 if (overlapX > overlapY)
                 {
-                    RectInt door = new(0, 0, doorWidth, 1);
+                    //horizontal door
+
+                    RectInt door = new(0, 0, doorLength, 1);
                     door.y = edgeNode.yMax < room.yMax ? room.y : room.yMax - 1;
                     door.x = edgeNode.xMax < room.xMax ? edgeNode.xMax - (overlapX / 2) : room.xMax - (overlapX / 2);
-                    door.x -= doorWidth / 2;
+                    door.x -= doorLength / 2; //add some extra space between the walls and the door
                     doors.Add(door);
                 }
                 else
                 {
-                    RectInt door = new(0, 0, 1, doorWidth);
+                    //vertical door
+
+                    RectInt door = new(0, 0, 1, doorLength);
                     door.x = edgeNode.x < room.x ? room.x : room.xMax - 1;
                     door.y = edgeNode.yMax < room.yMax ? edgeNode.yMax - (overlapY / 2) : room.yMax - (overlapY / 2);
-                    door.y -= doorWidth / 2;
+                    door.y -= doorLength / 2;
                     doors.Add(door);
                 }
             }
@@ -335,18 +377,24 @@ public class DungeonCreator : MonoBehaviour
         Debug.Log("Door creation done");
     }
 
+    /// <summary>
+    /// Gets a list of all the rooms intersecting with the provided room, excluding itself, and taking minDoorOverlap into account.
+    /// </summary>
+    /// <param name="currentRoom">The room to find the intersections of.</param>
+    /// <returns>A list with all rooms that intersect CurrentRoom that have an overlap >= minDoorOverlap.</returns>
     List<RectInt> GetIntersectingRooms(RectInt currentRoom)
     {
         List<RectInt> result = new List<RectInt>();
         foreach (RectInt edgeNode in completedRooms)
         {
-            //xMax = x + width
-            if (edgeNode == currentRoom) continue;
+            if (edgeNode == currentRoom) continue; //ignore itself
             if (edgeNode.xMax <= currentRoom.x) continue;
             if (edgeNode.yMax <= currentRoom.y) continue;
             if (edgeNode.x >= currentRoom.xMax) continue;
             if (edgeNode.y >= currentRoom.yMax) continue;
 
+            //get the amount of units overlap between the current room and it's edge on their respective axis
+            //there are 3 cases here: edgeNode.x < room.x, edgeNode.x == room.x and edgeNode.xMax < room.xMax
             int overlapX = edgeNode.x < currentRoom.x ? overlapX = edgeNode.xMax - currentRoom.x : overlapX = currentRoom.xMax - edgeNode.x;
             int overlapY = edgeNode.y < currentRoom.y ? overlapY = edgeNode.yMax - currentRoom.y : overlapY = currentRoom.yMax - edgeNode.y;
             if (overlapX >= minDoorOverlap + 2 || overlapY >= minDoorOverlap + 2) // + 2 to take into account the thickness of walls
@@ -360,6 +408,12 @@ public class DungeonCreator : MonoBehaviour
 
     #endregion
 
+    /// <summary>
+    /// Finds a room at a position using the x and z coordinates.
+    /// Returns default of no room at that position.
+    /// </summary>
+    /// <param name="position">Position to find a room at.</param>
+    /// <returns>A room at that position.</returns>
     RectInt FindRoomAtPosition(Vector3 position)
     {
         foreach (RectInt room in completedRooms)

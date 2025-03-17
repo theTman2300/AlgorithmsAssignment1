@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Graph<T>
@@ -34,16 +33,25 @@ public class Graph<T>
         //adjacencyList[toNode].Add(fromNode);
     }
 
+    /// <summary>
+    /// Get a list of all edge nodes of a node.
+    /// </summary>
+    /// <param name="node">Node to get the edges of.</param>
+    /// <returns>A list with all edges of a node.</returns>
     public List<T> GetEdgeNodes(T node)
     {
         if (!adjacencyList.ContainsKey(node))
         {
-            Debug.Log("Node does not excist in graph");
+            Debug.Log("Node does not exists in graph");
             return new List<T>(); //return an empty list with no edge nodes
         }
         return adjacencyList[node];
     }
 
+    /// <summary>
+    /// Print all edges of a node.
+    /// </summary>
+    /// <param name="node"></param>
     public void PrintEdgeNodes(T node)
     {
         foreach (T edgeNode in GetEdgeNodes(node))
@@ -60,21 +68,37 @@ public class Graph<T>
         adjacencyList.Clear();
     }
 
-    public bool ContainsKey(T node)
+    /// <summary>
+    /// Check if graph contains node.
+    /// </summary>
+    /// <param name="node">Node to check.</param>
+    /// <returns>Whether graph contains node.</returns>
+    public bool ContainsNode(T node)
     {
         return adjacencyList.ContainsKey(node);
     }
 
+    /// <summary>
+    /// Check if node contains edge.
+    /// </summary>
+    /// <param name="node">Node to check.</param>
+    /// <param name="edgeNode">Edge to check.</param>
+    /// <returns>Whether node contains edge.</returns>
     public bool NodeContainsEdgeNode(T node, T edgeNode)
     {
         return adjacencyList[node].Contains(edgeNode);
     }
 
+    /// <summary>
+    /// Get a list of all keys in graph.
+    /// </summary>
+    /// <returns>A list of all keys in graph.</returns>
     public List<T> GetKeys()
     {
         return new List<T>(adjacencyList.Keys);
     }
 
+    //Old unused Breadth First Search function:
     //public bool BFS(T startNode) //breadth first search
     //{
     //    //Note: this creates a directional graph
@@ -103,28 +127,36 @@ public class Graph<T>
     //    return result;
     //}
 
-    public bool DFS(T startNode) //Depth First Search
+    /// <summary>
+    /// Depth First Search algorithm.
+    /// </summary>
+    /// <param name="startNode">The node from which the dfs function will start.</param>
+    /// <param name="copyNewGraph">When true, copy the new graph created by this method to the graph.</param>
+    /// <returns>Whether every node is reachable</returns>
+    public bool DFS(T startNode, bool copyNewGraph) //Depth First Search
     {
         //Note: this creates a directional graph
         Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
-        List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
-        Stack<T> dfsStack = new(); //using a stack instead of a queue, because it is last in first out so i get actual depth first search
+        List<T> visited = new(); //using a list, otherwise i would need another variable storing the amount of nodes visited to get the correct id
+        Stack<T> dfsStack = new(); //using a stack because it causes the newest added edge nodes to be processed first, which is dfs
         dfsStack.Push(startNode);
 
         while (dfsStack.Count != 0)
         {
             T node = dfsStack.Pop();
-            if (!visited.Contains(node))
+            if (!visited.Contains(node)) //check if current node has not already been processed
             {
                 visited.Add(node);
                 if (!tempGraph.Keys.Contains(node)) //add node in dictionary if it does NOT exist already
-                    tempGraph[node] = new List<T>(); 
+                    tempGraph[node] = new List<T>();
+
                 foreach (T edgeNode in adjacencyList[node])
                 {
-                    if (!visited.Contains(edgeNode))
+                    if (!visited.Contains(edgeNode)) //if edge node has NOT been visited
                     {
-                        if(!dfsStack.Contains(edgeNode))
+                        if (!dfsStack.Contains(edgeNode) && copyNewGraph) //if it is not already in the stack. Second check is because edges are not necessary for checking if layout is valid
                         {
+                            //add edge nodes in both directions
                             tempGraph[node].Add(edgeNode);
 
                             if (!tempGraph.Keys.Contains(edgeNode)) //add edgeNode in dictionary if it does NOT exist already
@@ -137,8 +169,9 @@ public class Graph<T>
             }
         }
 
-        bool result = adjacencyList.Count == tempGraph.Count;
-        adjacencyList = new(tempGraph);
+        bool result = adjacencyList.Count == tempGraph.Count; //if all nodes are reachable the count will be the same
+        if (copyNewGraph)
+            adjacencyList = new(tempGraph);
         return result;
     }
 }

@@ -26,30 +26,12 @@ public class DungeonCreator : MonoBehaviour
     [Tooltip("Skip the animation to generate the rooms as fast as possible")]
     [SerializeField] bool generateFast = false;
     [Tooltip("This is reserved for any gameObject to more easily debug rooms.")]
-    [SerializeField] Transform roomCursor;
-    [Tooltip("Highlights and prints the location of the room, also prints all it's edge nodes.")]
-    [Button]
-    void SelectRoomWithCursor()
-    {
-
-        if (selectedRoom == default || selectedRoom != FindRoomAtPosition(roomCursor.position))
-        {
-            selectedRoom = FindRoomAtPosition(roomCursor.position);
-            Debug.Log("Selected Room " + selectedRoom);
-            roomGraph.PrintEdgeNodes(selectedRoom);
-        }
-        else
-        {
-            selectedRoom = default;
-        }
-    }
 
     [HorizontalLine]
-    [Header("Read Only")]
-    [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
-    [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
-    [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
-    [SerializeField, ReadOnly] List<RectInt> doors = new List<RectInt>(); //doors between rooms
+    [SerializeField] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
+    [SerializeField] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
+    [SerializeField] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
+    [SerializeField] List<RectInt> doors = new List<RectInt>(); //doors between rooms
     RectInt currentWorkingRoom = default; //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
@@ -75,6 +57,11 @@ public class DungeonCreator : MonoBehaviour
         doors.Clear();
         selectedRoom = default;
 
+        //set orthographic camera size and position to fit dungeon
+        Camera.main.orthographicSize = dungeonBounds.width > dungeonBounds.height ? dungeonBounds.width / 2 + 2 : dungeonBounds.height / 2 + 2; //+ 2 for some padding
+        Camera.main.transform.position = new(dungeonBounds.width / 2, Camera.main.transform.position.y, dungeonBounds.height / 2);
+
+        //set initial room
         rooms.Add(dungeonBounds);
 
         //check whether maxGenerationSize is bigger then minimum
@@ -122,9 +109,26 @@ public class DungeonCreator : MonoBehaviour
             AlgorithmsUtils.DebugRectInt(door, Color.cyan);
         }
 
+        if (Input.GetMouseButtonUp(0))
+            SelectRoom();
+
         //room cursor
         AlgorithmsUtils.DebugRectInt(selectedRoom, Color.red);
 
+    }
+    void SelectRoom()
+    {
+
+        if (selectedRoom == default || selectedRoom != FindRoomAtPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition)))
+        {
+            selectedRoom = FindRoomAtPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            Debug.Log("Selected Room " + selectedRoom);
+            roomGraph.PrintEdgeNodes(selectedRoom);
+        }
+        else
+        {
+            selectedRoom = default;
+        }
     }
 
     #region create basic layout (step 1)

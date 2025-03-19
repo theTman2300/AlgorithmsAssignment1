@@ -28,10 +28,13 @@ public class DungeonCreator : MonoBehaviour
     [Tooltip("This is reserved for any gameObject to more easily debug rooms.")]
 
     [HorizontalLine]
-    [SerializeField] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
-    [SerializeField] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
-    [SerializeField] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
-    [SerializeField] List<RectInt> doors = new List<RectInt>(); //doors between rooms
+    [SerializeField] bool drawCompletedRooms = true;
+    [SerializeField] bool drawDoors = true;
+    [SerializeField] bool drawGraph = true;
+    [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
+    [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
+    [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
+    [SerializeField, ReadOnly] List<RectInt> doors = new List<RectInt>(); //doors between rooms
     RectInt currentWorkingRoom = default; //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
@@ -56,6 +59,7 @@ public class DungeonCreator : MonoBehaviour
         roomGraph.Clear();
         doors.Clear();
         selectedRoom = default;
+        drawGraph = false; //stays false until final graph is completed, otherwise you would see an incorrect graph while rooms are being removed. Also only shown after doors are done to make the door generation more visible
 
         //set orthographic camera size and position to fit dungeon
         Camera.main.orthographicSize = dungeonBounds.width > dungeonBounds.height ? dungeonBounds.width / 2 + 2 : dungeonBounds.height / 2 + 2; //+ 2 for some padding
@@ -81,9 +85,12 @@ public class DungeonCreator : MonoBehaviour
         {
             AlgorithmsUtils.DebugRectInt(room, Color.yellow); //rooms to be split
         }
-        foreach (RectInt room in completedRooms)
+        if (drawCompletedRooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.white); //completed rooms
+            foreach (RectInt room in completedRooms)
+            {
+                AlgorithmsUtils.DebugRectInt(room, Color.white); //completed rooms
+            }
         }
 
         foreach (RectInt room in newRooms)
@@ -93,20 +100,26 @@ public class DungeonCreator : MonoBehaviour
         AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan); //current room being split
 
         //show graph
-        foreach (RectInt room in completedRooms)
+        if (drawGraph)
         {
-            if (!roomGraph.ContainsNode(room)) continue;
-
-            Vector3 roomMiddle = new Vector3(room.x + room.width / 2, 0, room.y + room.height / 2);
-            foreach (RectInt connectedRoom in roomGraph.GetEdgeNodes(room))
+            foreach (RectInt room in completedRooms)
             {
-                Vector3 connectedMiddle = new Vector3(connectedRoom.x + connectedRoom.width / 2, 0, connectedRoom.y + connectedRoom.height / 2);
-                Debug.DrawLine(roomMiddle, connectedMiddle, Color.magenta);
+                if (!roomGraph.ContainsNode(room)) continue;
+
+                Vector3 roomMiddle = new Vector3(room.x + room.width / 2, 0, room.y + room.height / 2);
+                foreach (RectInt connectedRoom in roomGraph.GetEdgeNodes(room))
+                {
+                    Vector3 connectedMiddle = new Vector3(connectedRoom.x + connectedRoom.width / 2, 0, connectedRoom.y + connectedRoom.height / 2);
+                    Debug.DrawLine(roomMiddle, connectedMiddle, Color.magenta);
+                }
             }
         }
-        foreach (RectInt door in doors)
+        if (drawDoors)
         {
-            AlgorithmsUtils.DebugRectInt(door, Color.cyan);
+            foreach (RectInt door in doors)
+            {
+                AlgorithmsUtils.DebugRectInt(door, Color.cyan);
+            }
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -379,6 +392,7 @@ public class DungeonCreator : MonoBehaviour
         }
 
         Debug.Log("Door creation done");
+        drawGraph = true;
     }
 
     /// <summary>

@@ -478,8 +478,11 @@ MonoBehaviour:
   minDoorOverlap: 4
   doorLength: 2
   seed: 984561
-  secondsPerOperation: 0
+  secondsPerOperation: 0.1
   generateFast: 0
+  drawCompletedRooms: 1
+  drawDoors: 1
+  drawGraph: 1
   rooms:
   - x: 0
     y: 0

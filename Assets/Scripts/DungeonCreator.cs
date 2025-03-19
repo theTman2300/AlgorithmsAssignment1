@@ -306,7 +306,7 @@ public class DungeonCreator : MonoBehaviour
             completedRooms.RemoveAt(0);
 
             bool roomsAreReachable = false;
-            roomsAreReachable = roomGraph.DFS(completedRooms[0], false);
+            roomsAreReachable = roomGraph.DFS(roomToRemove, false);
 
             if (!generateFast)
                 yield return new WaitForSeconds(secondsPerOperation);

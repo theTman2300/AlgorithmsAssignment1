@@ -66,7 +66,7 @@ public class DungeonCreator : MonoBehaviour
         Camera.main.transform.position = new(dungeonBounds.width / 2, Camera.main.transform.position.y, dungeonBounds.height / 2);
 
         //set initial room
-        rooms.Add(dungeonBounds);
+        rooms.Add(new RectInt(dungeonBounds.x + 1, dungeonBounds.y + 1, dungeonBounds.width - 2, dungeonBounds.height - 2));
 
         //check whether maxGenerationSize is bigger then minimum
         if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
@@ -92,6 +92,7 @@ public class DungeonCreator : MonoBehaviour
                 AlgorithmsUtils.DebugRectInt(room, Color.white); //completed rooms
             }
         }
+        AlgorithmsUtils.DebugRectInt(dungeonBounds, Color.white); //dungeon outline
 
         foreach (RectInt room in newRooms)
         {

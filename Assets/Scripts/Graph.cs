@@ -98,35 +98,6 @@ public class Graph<T>
         return new List<T>(adjacencyList.Keys);
     }
 
-    //Old unused Breadth First Search function:
-    //public bool BFS(T startNode) //breadth first search
-    //{
-    //    //Note: this creates a directional graph
-    //    Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
-    //    List<T> visited = new(); //using a list, because there can't be any duplicate values and I don't know the size beforehand
-    //    Queue<T> bfsQueue = new(); //using a queue because otherwise I would have to constantly shift values in an array and I'm not using a list because I am always using the value at the end anyway
-    //    bfsQueue.Enqueue(startNode);
-
-    //    visited.Add(startNode);
-    //    while (bfsQueue.Count != 0)
-    //    {
-    //        T node = bfsQueue.Dequeue();
-    //        tempGraph[node] = new();
-    //        foreach (T edgeNode in adjacencyList[node])
-    //        {
-    //            if (!visited.Contains(edgeNode))
-    //            {
-    //                bfsQueue.Enqueue(edgeNode);
-    //                visited.Add(edgeNode);
-    //                tempGraph[node].Add(edgeNode);
-    //            }
-    //        }
-    //    }
-    //    bool result = adjacencyList.Count == tempGraph.Count;
-    //    adjacencyList = tempGraph;
-    //    return result;
-    //}
-
     /// <summary>
     /// Depth First Search algorithm.
     /// </summary>

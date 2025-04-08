@@ -108,8 +108,9 @@ public class Graph<T>
     {
         //Note: this creates a directional graph
         Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
-        List<T> visited = new(); //using a list, otherwise i would need another variable storing the amount of nodes visited to get the correct id
+        HashSet<T> visited = new(); //using a hashset because it is faster than a list. (this helped my performance by a few seconds)
         Stack<T> dfsStack = new(); //using a stack because it causes the newest added edge nodes to be processed first, which is dfs
+        HashSet<T> wasInStack = new(); //using this hashset to avoid a contains in the dfsStack, which is way slower
         dfsStack.Push(startNode);
 
         while (dfsStack.Count != 0)
@@ -118,23 +119,22 @@ public class Graph<T>
             if (!visited.Contains(node)) //check if current node has not already been processed
             {
                 visited.Add(node);
-                if (!tempGraph.Keys.Contains(node)) //add node in dictionary if it does NOT exist already
-                    tempGraph[node] = new List<T>();
+                tempGraph.TryAdd(node, new());
 
                 foreach (T edgeNode in adjacencyList[node])
                 {
                     if (!visited.Contains(edgeNode)) //if edge node has NOT been visited
                     {
-                        if (!dfsStack.Contains(edgeNode) && copyNewGraph) //if it is not already in the stack. Second check is because edges are not necessary for checking if layout is valid
+                        if (!wasInStack.Contains(edgeNode) && copyNewGraph) //if it is not already in the stack. Second check is because edges are not necessary for checking if layout is valid
                         {
                             //add edge nodes in both directions
                             tempGraph[node].Add(edgeNode);
 
-                            if (!tempGraph.Keys.Contains(edgeNode)) //add edgeNode in dictionary if it does NOT exist already
-                                tempGraph[edgeNode] = new();
+                            tempGraph.TryAdd(edgeNode, new());
                             tempGraph[edgeNode].Add(node);
                         }
                         dfsStack.Push(edgeNode);
+                        wasInStack.Add(edgeNode);
                     }
                 }
             }

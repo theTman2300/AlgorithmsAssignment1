@@ -321,6 +321,9 @@ public class DungeonCreator : MonoBehaviour
                 break;
             }
         }
+
+        if (!generateFast)
+            yield return new WaitForSeconds(secondsPerOperation);
         SetRoomGraph(); //set all the new nodes and edges after removal to make sure dfs is able to create the correct graph
 
         Debug.Log(completedRooms[0]); //log where dfs starts
@@ -362,22 +365,14 @@ public class DungeonCreator : MonoBehaviour
                 //check if door already exists
                 if (roomsWithDoor.Contains(edgeNode)) continue;
 
-                //get the amount of units overlap between the current room and it's edge on their respective axis
-                //there are 3 cases here: edgeNode.x < room.x, edgeNode.x == room.x and edgeNode.xMax < room.xMax
-                int overlapX = edgeNode.x < room.x ? edgeNode.xMax - room.x : edgeNode.x == room.x ? (edgeNode.xMax < room.xMax ? edgeNode.xMax - room.x : room.xMax - edgeNode.x) : room.xMax - edgeNode.x;
-                int overlapY = edgeNode.y < room.y ? edgeNode.yMax - room.y : edgeNode.y == room.y ? (edgeNode.yMax < room.yMax ? edgeNode.yMax - room.y : room.yMax - edgeNode.y) : room.yMax - edgeNode.y;
-
-                if (overlapX > overlapY)
+                RectInt overlap = AlgorithmsUtils.Intersect(room, edgeNode);
+                if (overlap.width > overlap.height)
                 {
                     //horizontal door
 
                     RectInt door = new(0, 0, doorLength, 1);
                     door.y = edgeNode.yMax < room.yMax ? room.y : room.yMax - 1;
-                    //door.x = edgeNode.xMax < room.xMax ? rng.Next(edgeNode.xMax + overlapX - 1, edgeNode.xMax + 1) : rng.Next(room.xMax + overlapX - 1, room.xMax + 1);
-
-                    door.x = edgeNode.xMax > room.xMax ? rng.Next(room.xMax - overlapX + 1, room.xMax - 1 - doorLength) 
-                        : rng.Next(edgeNode.xMax - overlapX + 1, edgeNode.xMax - 1 - doorLength);
-
+                    door.x = rng.Next(Mathf.Min(room.xMax, edgeNode.xMax) - overlap.width + 1, Mathf.Min(room.xMax, edgeNode.xMax) - doorLength - 1);
                     doors.Add(door);
                 }
                 else
@@ -386,14 +381,7 @@ public class DungeonCreator : MonoBehaviour
 
                     RectInt door = new(0, 0, 1, doorLength);
                     door.x = edgeNode.x < room.x ? room.x : room.xMax - 1;
-
-                    //door.y = edgeNode.yMax < room.yMax ? rng.Next(edgeNode.yMax + overlapY - 1, edgeNode.yMax + 1) : rng.Next(room.yMax - overlapY - 1, room.yMax + 1);
-
-                    door.y = edgeNode.yMax > room.yMax ? rng.Next(room.yMax - overlapY + 1, room.yMax - 1 - doorLength) 
-                        : rng.Next(edgeNode.yMax - overlapY + 1, edgeNode.yMax - 1 - doorLength);
-
-                    //door.y = edgeNode.yMax < room.yMax ? edgeNode.yMax - (overlapY / 2) : room.yMax - (overlapY / 2);
-                    //door.y -= doorLength / 2;
+                    door.y = rng.Next(Mathf.Min(room.yMax, edgeNode.yMax) - overlap.height + 1, Mathf.Min(room.yMax, edgeNode.yMax) - doorLength - 1);
                     doors.Add(door);
                 }
             }
@@ -421,11 +409,8 @@ public class DungeonCreator : MonoBehaviour
             if (edgeNode.x >= currentRoom.xMax) continue;
             if (edgeNode.y >= currentRoom.yMax) continue;
 
-            //get the amount of units overlap between the current room and it's edge on their respective axis
-            //there are 3 cases here: edgeNode.x < room.x, edgeNode.x == room.x and edgeNode.xMax < room.xMax
-            int overlapX = edgeNode.x < currentRoom.x ? overlapX = edgeNode.xMax - currentRoom.x : overlapX = currentRoom.xMax - edgeNode.x;
-            int overlapY = edgeNode.y < currentRoom.y ? overlapY = edgeNode.yMax - currentRoom.y : overlapY = currentRoom.yMax - edgeNode.y;
-            if (overlapX >= minDoorOverlap + 2 || overlapY >= minDoorOverlap + 2) // + 2 to take into account the thickness of walls
+            RectInt overlap = AlgorithmsUtils.Intersect(currentRoom, edgeNode);
+            if (overlap.width >= minDoorOverlap + 2 || overlap.height >= minDoorOverlap + 2) // + 2 to take into account the thickness of walls
             {
                 result.Add(edgeNode);
             }

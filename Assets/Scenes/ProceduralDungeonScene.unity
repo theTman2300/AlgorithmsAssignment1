@@ -315,6 +315,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1391267070}
   - component: {fileID: 1391267069}
+  - component: {fileID: 1391267071}
   m_Layer: 0
   m_Name: '- Dungeon Creator -'
   m_TagString: Untagged
@@ -334,7 +335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 544416099d8587f45a45a76abca6aa22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dungeonBounds:
+  DungeonBounds:
     x: 0
     y: 0
     width: 100
@@ -347,8 +348,8 @@ MonoBehaviour:
   maxRoomSize:
     x: 0
     y: 0
-    width: 25
-    height: 25
+    width: 20
+    height: 20
   minRoomSize:
     x: 0
     y: 0
@@ -358,7 +359,7 @@ MonoBehaviour:
   doorLength: 2
   seed: 984561
   secondsPerOperation: 0.1
-  generateFast: 0
+  generateFast: 1
   drawCompletedRooms: 1
   drawDoors: 1
   drawGraph: 1
@@ -405,6 +406,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1391267071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391267068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc6428257e54ea84e8866fb2a1d26977, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

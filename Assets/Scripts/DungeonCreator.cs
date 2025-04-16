@@ -8,7 +8,7 @@ using UnityEngine;
 public class DungeonCreator : MonoBehaviour
 {
     [Tooltip("The size of the outer bounds of the dungeon.")]
-    [SerializeField] RectInt dungeonBounds;
+    public RectInt DungeonBounds;
     //even though only width and height are only taken into account, I still use RectInt instead of Vector2Int because is think it looks better when it actually says width and height in the inspector
     [Tooltip("Used to avoid spiral pattern when creating larger dungeons. \nMust always be bigger then minSize + 2, but recommended to be somewhere around 3/4 of dungeonBounds. \nOnly width and height are taken into account.")]
     [SerializeField] RectInt maxGenerationSize;
@@ -62,11 +62,12 @@ public class DungeonCreator : MonoBehaviour
         drawGraph = false; //stays false until final graph is completed, otherwise you would see an incorrect graph while rooms are being removed. Also only shown after doors are done to make the door generation more visible
 
         //set orthographic camera size and position to fit dungeon
-        Camera.main.orthographicSize = dungeonBounds.width > dungeonBounds.height ? dungeonBounds.width / 2 + 2 : dungeonBounds.height / 2 + 2; //+ 2 for some padding
-        Camera.main.transform.position = new(dungeonBounds.width / 2, Camera.main.transform.position.y, dungeonBounds.height / 2);
+        Camera.main.orthographicSize = DungeonBounds.width > DungeonBounds.height ? DungeonBounds.width / 2 + 2 : DungeonBounds.height / 2 + 2; //+ 2 for some padding
+        Camera.main.transform.position = new(DungeonBounds.width / 2, Camera.main.transform.position.y, DungeonBounds.height / 2);
 
         //set initial room
-        rooms.Add(new RectInt(dungeonBounds.x + 1, dungeonBounds.y + 1, dungeonBounds.width - 2, dungeonBounds.height - 2));
+        //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
+        rooms.Add(DungeonBounds);
 
         //check whether maxGenerationSize is bigger then minimum
         if (maxGenerationSize.width < minRoomSize.width + 2 || maxGenerationSize.height < minRoomSize.height + 2)
@@ -92,7 +93,7 @@ public class DungeonCreator : MonoBehaviour
                 AlgorithmsUtils.DebugRectInt(room, Color.white); //completed rooms
             }
         }
-        AlgorithmsUtils.DebugRectInt(dungeonBounds, Color.white); //dungeon outline
+        //AlgorithmsUtils.DebugRectInt(DungeonBounds, Color.white); //dungeon outline
 
         foreach (RectInt room in newRooms)
         {
@@ -441,4 +442,8 @@ public class DungeonCreator : MonoBehaviour
         return default;
     }
 
+    public (RectInt[], RectInt[]) GetRoomsAndDoors()
+    {
+        return (completedRooms.ToArray(), doors.ToArray());
+    }
 }

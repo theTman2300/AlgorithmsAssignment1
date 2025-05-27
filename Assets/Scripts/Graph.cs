@@ -145,4 +145,34 @@ public class Graph<T>
             adjacencyList = new(tempGraph);
         return result;
     }
+
+    Dictionary<T, List<T>> tempGraph = new Dictionary<T, List<T>>();
+    HashSet<T> discovered = new(); //using a hashset because it is faster than a list. 
+    public bool StartDFSrecursion(T node, bool copyNewGraph)
+    {
+        tempGraph = new Dictionary<T, List<T>>();
+        discovered = new();
+
+        DFSrecursive(node);
+        bool result = adjacencyList.Count == tempGraph.Count;
+        if (copyNewGraph)
+            adjacencyList = new(tempGraph);
+        return result;
+    }
+
+    void DFSrecursive(T node)
+    {
+        if (!discovered.Contains(node))
+        {
+            discovered.Add(node);
+            tempGraph.TryAdd(node, new());
+            foreach (T edgeNode in adjacencyList[node])
+            {
+                if (!discovered.Contains(edgeNode))
+                {
+                    DFSrecursive(edgeNode);
+                }
+            }
+        }
+    }
 }

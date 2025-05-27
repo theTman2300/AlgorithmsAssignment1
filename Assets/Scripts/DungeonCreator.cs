@@ -308,7 +308,7 @@ public class DungeonCreator : MonoBehaviour
             completedRooms.RemoveAt(0);
 
             bool roomsAreReachable = false;
-            roomsAreReachable = roomGraph.DFS(roomToRemove, false);
+            roomsAreReachable = roomGraph.StartDFSrecursion(roomToRemove, false);
 
             if (!generateFast)
                 yield return new WaitForSeconds(secondsPerOperation);
@@ -328,7 +328,7 @@ public class DungeonCreator : MonoBehaviour
         SetRoomGraph(); //set all the new nodes and edges after removal to make sure dfs is able to create the correct graph
 
         Debug.Log(completedRooms[0]); //log where dfs starts
-        Debug.Log("All rooms reachable DFS: " + roomGraph.DFS(completedRooms[0], true)); //last graph check, should always return true
+        Debug.Log("All rooms reachable DFS: " + roomGraph.StartDFSrecursion(completedRooms[0], true)); //last graph check, should always return true
         Debug.Log("Graph creation done");
         StartCoroutine(CreateDoors());
     }

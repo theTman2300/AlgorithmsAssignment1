@@ -171,6 +171,13 @@ public class Graph<T>
                 if (!discovered.Contains(edgeNode))
                 {
                     DFSrecursive(edgeNode);
+
+                    //add edge nodes in both directions
+                    tempGraph[node].Add(edgeNode);
+
+                    tempGraph.TryAdd(edgeNode, new());
+                    tempGraph[edgeNode].Add(node);
+
                 }
             }
         }

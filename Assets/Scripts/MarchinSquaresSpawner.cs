@@ -68,8 +68,12 @@ public class MarchinSquaresSpawner : MonoBehaviour
         {
             for (int y = 0; y < marchedTilemap.GetLength(1); y++)
             {
-                GameObject assetToSpawn = assets[marchedTilemap[x, y]];
+                if (marchedTilemap[x, y] == 0)
+                    continue;
+
+                GameObject assetToSpawn = assets[marchedTilemap[x, y] - 1];
                 //spawn asset
+                Instantiate(assetToSpawn, new Vector3(x + 1, 0, y + 1), Quaternion.identity, transform);
 
                 if (!generateFast)
                     yield return new WaitForSeconds(secondsPerOperation);

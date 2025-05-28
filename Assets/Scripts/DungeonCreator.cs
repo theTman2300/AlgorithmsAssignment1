@@ -25,7 +25,6 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField] float secondsPerOperation = .5f;
     [Tooltip("Skip the animation to generate the rooms as fast as possible")]
     [SerializeField] bool generateFast = false;
-    [Tooltip("This is reserved for any gameObject to more easily debug rooms.")]
 
     [HorizontalLine]
     [SerializeField] bool drawCompletedRooms = true;

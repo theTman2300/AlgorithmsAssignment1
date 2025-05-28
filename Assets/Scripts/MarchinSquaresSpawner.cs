@@ -1,4 +1,5 @@
 using NaughtyAttributes;
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(TilemapGenerator))]
@@ -13,6 +14,15 @@ public class MarchinSquaresSpawner : MonoBehaviour
     //top right (tr) = 2
     //top left (tl) = 4
     //bottom left (bl) = 8
+
+    [Tooltip("In order of 0-15 \nLeave 5 and 10 empty.")]
+    [SerializeField] GameObject[] assets;
+
+    [Space]
+    [SerializeField]
+    float secondsPerOperation = .5f;
+    [Tooltip("Skip the animation to generate the rooms as fast as possible")]
+    [SerializeField] bool generateFast = false;
 
     void Start()
     {
@@ -48,6 +58,27 @@ public class MarchinSquaresSpawner : MonoBehaviour
                     Debug.LogWarning("Found odd corner at: " + x + ", " + y);
             }
         }
+
+        StartCoroutine(spawnWallAssets());
+    }
+
+    IEnumerator spawnWallAssets()
+    {
+        for (int x = 0; x < marchedTilemap.GetLength(0); x++)
+        {
+            for (int y = 0; y < marchedTilemap.GetLength(1); y++)
+            {
+                GameObject assetToSpawn = assets[marchedTilemap[x, y]];
+                //spawn asset
+
+                if (!generateFast)
+                    yield return new WaitForSeconds(secondsPerOperation);
+            }
+        }
+
+
+        if (!generateFast)
+            yield return new WaitForSeconds(secondsPerOperation);
     }
 
     [Button]

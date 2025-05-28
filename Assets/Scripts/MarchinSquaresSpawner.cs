@@ -30,6 +30,10 @@ public class MarchinSquaresSpawner : MonoBehaviour
     float secondsPerOperation = .5f;
     [Tooltip("Skip the animation to generate the rooms as fast as possible")]
     [SerializeField] bool generateFast = false;
+    [Space]
+    [Tooltip("this will teleport the player to the middle of a room")] //this prevents them from becoming stuck if a room is removed where they are
+    [SerializeField] Transform player;
+
 
     void Start()
     {
@@ -133,6 +137,11 @@ public class MarchinSquaresSpawner : MonoBehaviour
 
         Debug.Log("Floor spawned, !!Dungeon finished!!");
 
+        if (player != null)
+        {
+            RectInt startRoom = tilemapGenerator.GetRooms()[0];
+            player.position = new(startRoom.x + startRoom.width / 2, .7f, startRoom.y + startRoom.height / 2);
+        }
         navMesh.BuildNavMesh();
     }
 
@@ -156,5 +165,7 @@ public class MarchinSquaresSpawner : MonoBehaviour
     public void ResetDungeon()
     {
         StopAllCoroutines();
+        isFloor = new();
+        floorQueue = new();
     }
 }

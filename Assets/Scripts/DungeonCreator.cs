@@ -69,9 +69,12 @@ public class DungeonCreator : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+
+        /*
         //set orthographic camera size and position to fit dungeon
         Camera.main.orthographicSize = DungeonBounds.width > DungeonBounds.height ? DungeonBounds.width / 2 + 2 : DungeonBounds.height / 2 + 2; //+ 2 for some padding
         Camera.main.transform.position = new(DungeonBounds.width / 2, Camera.main.transform.position.y, DungeonBounds.height / 2);
+        */
 
         //set initial room
         //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
@@ -132,13 +135,15 @@ public class DungeonCreator : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
-            SelectRoom();
+        //if (Input.GetMouseButtonUp(0))
+        //    SelectRoom();
 
         //room cursor
         AlgorithmsUtils.DebugRectInt(selectedRoom, Color.red);
 
     }
+
+    // only works top down in orthographic view (not sure if orthographic is required, but that is how i have previously used it)
     void SelectRoom()
     {
 

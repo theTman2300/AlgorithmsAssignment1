@@ -9,6 +9,7 @@ public class TilemapGenerator : MonoBehaviour
     int[,] tilemap;
     RectInt[] rooms;
     RectInt[] doors;
+    bool tileMapWasGenerated = false;
 
     private void Start()
     {
@@ -48,6 +49,7 @@ public class TilemapGenerator : MonoBehaviour
                 }
             }
         }
+        tileMapWasGenerated = true;
     }
 
     [Button]
@@ -68,6 +70,19 @@ public class TilemapGenerator : MonoBehaviour
 
     public int[,] GetTilemap()
     {
+        if (!tileMapWasGenerated)
+        {
+            GenerateTilemap();
+        }
+
         return tilemap;
+    }
+
+    public RectInt[] GetRooms()
+    {
+        if (rooms.Length == 0)
+            (rooms, doors) = dungeonCreator.GetRoomsAndDoors();
+
+        return rooms;
     }
 }

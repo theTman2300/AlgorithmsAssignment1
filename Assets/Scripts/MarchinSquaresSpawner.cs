@@ -1,5 +1,7 @@
 using NaughtyAttributes;
 using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(TilemapGenerator))]
@@ -17,6 +19,7 @@ public class MarchinSquaresSpawner : MonoBehaviour
 
     [Tooltip("In order of 0-15 \nLeave 5 and 10 empty.")]
     [SerializeField] GameObject[] assets;
+    [SerializeField] GameObject floorAsset;
 
     [Space]
     [SerializeField]
@@ -79,10 +82,45 @@ public class MarchinSquaresSpawner : MonoBehaviour
                     yield return new WaitForSeconds(secondsPerOperation);
             }
         }
+        Debug.Log("Walls spawned");
+        RectInt startRoom = tilemapGenerator.GetRooms()[0];
+        floorQueue.Add((startRoom.x + startRoom.width / 2, startRoom.y + startRoom.height / 2));
+        StartCoroutine(floodFloor());
+    }
 
+    HashSet<(int, int)> isFloor = new();
+    HashSet<(int, int)> floorQueue = new();
+    IEnumerator floodFloor()
+    {
+        //flood 4 way
+        while (floorQueue.Count > 0)
+        {
+            HashSet<(int, int)> queue = new();
+            foreach ((int, int) floorPos in floorQueue)
+            {
+                //spawn floor
+                Instantiate(floorAsset, new(floorPos.Item1 + 1, 0, floorPos.Item2 + 1), Quaternion.identity, transform);
+                isFloor.Add(floorPos);
 
-        if (!generateFast)
-            yield return new WaitForSeconds(secondsPerOperation);
+                //fill queue
+                if (marchedTilemap[floorPos.Item1 + 1, floorPos.Item2] == 0 && !isFloor.Contains((floorPos.Item1 + 1, floorPos.Item2))) //right
+                    queue.Add((floorPos.Item1 + 1, floorPos.Item2));
+
+                if (marchedTilemap[floorPos.Item1, floorPos.Item2 + 1] == 0 && !isFloor.Contains((floorPos.Item1, floorPos.Item2 + 1))) //top
+                    queue.Add((floorPos.Item1, floorPos.Item2 + 1));
+
+                if (marchedTilemap[floorPos.Item1 - 1, floorPos.Item2] == 0 && !isFloor.Contains((floorPos.Item1 - 1, floorPos.Item2))) //left
+                    queue.Add((floorPos.Item1 - 1, floorPos.Item2));
+
+                if (marchedTilemap[floorPos.Item1, floorPos.Item2 - 1] == 0 && !isFloor.Contains((floorPos.Item1, floorPos.Item2 - 1))) //bottom
+                    queue.Add((floorPos.Item1, floorPos.Item2 - 1));
+
+                if (!generateFast)
+                    yield return new WaitForSeconds(secondsPerOperation);
+            }
+            floorQueue.Clear();
+            floorQueue.AddRange(queue);
+        }
     }
 
     [Button]

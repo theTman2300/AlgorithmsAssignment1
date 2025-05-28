@@ -20,6 +20,8 @@ public class MarchinSquaresSpawner : MonoBehaviour
     }
 
     [Button]
+    //seperated the spawning of the tiles and the making of the tilemap to make clear to look at/easier to read
+    //this will also make it easier to animate
     void CreateMarchingSquaresTilemap()
     {
         tilemap = tilemapGenerator.GetTilemap();
@@ -41,6 +43,9 @@ public class MarchinSquaresSpawner : MonoBehaviour
                     binaryCorners += 8;
 
                 marchedTilemap[x, y] = binaryCorners;
+
+                if (binaryCorners == 5 || binaryCorners == 10) //the way my dungeon is generated should never cause one of these corners and would indacate some sort of error somewhere
+                    Debug.LogWarning("Found odd corner at: " + x + ", " + y);
             }
         }
     }

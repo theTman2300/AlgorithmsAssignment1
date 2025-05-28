@@ -5,9 +5,11 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(TilemapGenerator))]
+[RequireComponent(typeof(DungeonCreator))]
 public class MarchinSquaresSpawner : MonoBehaviour
 {
     TilemapGenerator tilemapGenerator;
+    DungeonCreator dungeonCreator;
     int[,] tilemap;
     int[,] marchedTilemap;
     //counterclockwise binary representation of the corners
@@ -30,12 +32,13 @@ public class MarchinSquaresSpawner : MonoBehaviour
     void Start()
     {
         tilemapGenerator = GetComponent<TilemapGenerator>();
+        dungeonCreator = GetComponent<DungeonCreator>();
     }
 
     [Button]
     //seperated the spawning of the tiles and the making of the tilemap to make clear to look at/easier to read
     //this will also make it easier to animate
-    void CreateMarchingSquaresTilemap()
+    public void SpawnAssets()
     {
         tilemap = tilemapGenerator.GetTilemap();
         marchedTilemap = new int[tilemap.GetLength(0) - 1, tilemap.GetLength(1) - 1];
@@ -82,7 +85,11 @@ public class MarchinSquaresSpawner : MonoBehaviour
                     yield return new WaitForSeconds(secondsPerOperation);
             }
         }
+
         Debug.Log("Walls spawned");
+        dungeonCreator.DrawCompletedRooms = false;
+        dungeonCreator.DrawDoors = false;
+
         RectInt startRoom = tilemapGenerator.GetRooms()[0];
         floorQueue.Add((startRoom.x + startRoom.width / 2, startRoom.y + startRoom.height / 2));
         StartCoroutine(floodFloor());
@@ -141,5 +148,10 @@ public class MarchinSquaresSpawner : MonoBehaviour
         }
 
         print(result);
+    }
+
+    public void ResetDungeon()
+    {
+        StopAllCoroutines();
     }
 }

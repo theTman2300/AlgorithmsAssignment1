@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class DungeonCreator : MonoBehaviour
 {
@@ -27,13 +28,15 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField] bool generateFast = false;
 
     [HorizontalLine]
-    [SerializeField] bool drawCompletedRooms = true;
-    [SerializeField] bool drawDoors = true;
-    [SerializeField] bool drawGraph = true;
+    public bool DrawCompletedRooms = true;
+    public bool DrawDoors = true;
+    public bool DrawGraph = true;
     [SerializeField, ReadOnly] List<RectInt> rooms = new List<RectInt>(); //rooms to be split
     [SerializeField, ReadOnly] List<RectInt> newRooms = new List<RectInt>(); //rooms that have been split this loop
     [SerializeField, ReadOnly] List<RectInt> completedRooms = new List<RectInt>(); //completed rooms  
     [SerializeField, ReadOnly] List<RectInt> doors = new List<RectInt>(); //doors between rooms
+    [Space]
+    [SerializeField] UnityEvent onResetDungeon = new();
     RectInt currentWorkingRoom = default; //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
@@ -51,6 +54,7 @@ public class DungeonCreator : MonoBehaviour
     /// </summary>
     private void ResetDungeon()
     {
+        onResetDungeon.Invoke();
         StopAllCoroutines(); //in event that dungeon generator was still running when this function is called
         rooms.Clear();
         newRooms.Clear();
@@ -58,7 +62,12 @@ public class DungeonCreator : MonoBehaviour
         roomGraph.Clear();
         doors.Clear();
         selectedRoom = default;
-        drawGraph = false; //stays false until final graph is completed, otherwise you would see an incorrect graph while rooms are being removed. Also only shown after doors are done to make the door generation more visible
+        DrawGraph = false; //stays false until final graph is completed, otherwise you would see an incorrect graph while rooms are being removed. Also only shown after doors are done to make the door generation more visible
+
+        foreach (Transform child in transform.GetComponentInChildren<Transform>()) //remove assets
+        {
+            Destroy(child.gameObject);
+        }
 
         //set orthographic camera size and position to fit dungeon
         Camera.main.orthographicSize = DungeonBounds.width > DungeonBounds.height ? DungeonBounds.width / 2 + 2 : DungeonBounds.height / 2 + 2; //+ 2 for some padding
@@ -85,7 +94,7 @@ public class DungeonCreator : MonoBehaviour
         {
             AlgorithmsUtils.DebugRectInt(room, Color.yellow); //rooms to be split
         }
-        if (drawCompletedRooms)
+        if (DrawCompletedRooms)
         {
             foreach (RectInt room in completedRooms)
             {
@@ -101,7 +110,7 @@ public class DungeonCreator : MonoBehaviour
         AlgorithmsUtils.DebugRectInt(currentWorkingRoom, Color.cyan); //current room being split
 
         //show graph
-        if (drawGraph)
+        if (DrawGraph)
         {
             foreach (RectInt room in completedRooms)
             {
@@ -115,7 +124,7 @@ public class DungeonCreator : MonoBehaviour
                 }
             }
         }
-        if (drawDoors)
+        if (DrawDoors)
         {
             foreach (RectInt door in doors)
             {
@@ -390,7 +399,16 @@ public class DungeonCreator : MonoBehaviour
         }
 
         Debug.Log("Door creation done");
-        drawGraph = true;
+        DrawGraph = true;
+
+        //start asset spawing
+        yield return new WaitForSeconds(4);
+        if(gameObject.TryGetComponent<MarchinSquaresSpawner>(out MarchinSquaresSpawner spawner))
+        {
+            DrawGraph = false;
+            spawner.SpawnAssets();
+        }
+
     }
 
     /// <summary>

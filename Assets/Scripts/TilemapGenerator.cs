@@ -85,4 +85,12 @@ public class TilemapGenerator : MonoBehaviour
 
         return rooms;
     }
+
+    public void ResetDungeon()
+    {
+        StopAllCoroutines();
+        tileMapWasGenerated = false;
+        rooms = null;
+        doors = null;
+    }
 }

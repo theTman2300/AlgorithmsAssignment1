@@ -338,7 +338,7 @@ GameObject:
   m_Component:
   - component: {fileID: 723629142}
   m_Layer: 0
-  m_Name: Base assets
+  m_Name: Asset Showcase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -353,7 +353,7 @@ Transform:
   m_GameObject: {fileID: 723629141}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: 0, z: -8}
+  m_LocalPosition: {x: 2, y: 0, z: -19.06}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -547,8 +547,8 @@ MonoBehaviour:
   maxRoomSize:
     x: 0
     y: 0
-    width: 20
-    height: 20
+    width: 12
+    height: 12
   minRoomSize:
     x: 0
     y: 0
@@ -557,11 +557,11 @@ MonoBehaviour:
   minDoorOverlap: 4
   doorLength: 2
   seed: 984561
-  secondsPerOperation: 0.1
-  generateFast: 1
-  drawCompletedRooms: 1
-  drawDoors: 1
-  drawGraph: 1
+  secondsPerOperation: 0.05
+  generateFast: 0
+  DrawCompletedRooms: 1
+  DrawDoors: 1
+  DrawGraph: 1
   rooms:
   - x: 0
     y: 0
@@ -590,6 +590,33 @@ MonoBehaviour:
     height: 72
   completedRooms: []
   doors: []
+  onResetDungeon:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1391267071}
+        m_TargetAssemblyTypeName: TilemapGenerator, Assembly-CSharp
+        m_MethodName: ResetDungeon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1391267072}
+        m_TargetAssemblyTypeName: MarchinSquaresSpawner, Assembly-CSharp
+        m_MethodName: ResetDungeon
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &1391267070
 Transform:
   m_ObjectHideFlags: 0
@@ -762,13 +789,13 @@ Light:
   serializedVersion: 11
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0.5
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -824,13 +851,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1483754391}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.48296294, y: -0.22414385, z: 0.1294095, w: 0.8365163}
+  m_LocalRotation: {x: 0.4249744, y: -0.45627803, z: 0.2634321, w: 0.7360779}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 60, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 60, y: -63.588, z: 0}
 --- !u!4 &1568054164 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2302126307735179971, guid: 65302fcd2eb9fa14795a4dc9632cf9a3, type: 3}

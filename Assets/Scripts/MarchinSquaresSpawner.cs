@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.AI.Navigation;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -22,6 +23,7 @@ public class MarchinSquaresSpawner : MonoBehaviour
     [Tooltip("In order of 0-15 \nLeave 5 and 10 empty.")]
     [SerializeField] GameObject[] assets;
     [SerializeField] GameObject floorAsset;
+    [SerializeField] NavMeshSurface navMesh;
 
     [Space]
     [SerializeField]
@@ -129,8 +131,9 @@ public class MarchinSquaresSpawner : MonoBehaviour
             floorQueue.AddRange(queue);
         }
 
-        Debug.Log("Floor spawned");
+        Debug.Log("Floor spawned, !!Dungeon finished!!");
 
+        navMesh.BuildNavMesh();
     }
 
     [Button]

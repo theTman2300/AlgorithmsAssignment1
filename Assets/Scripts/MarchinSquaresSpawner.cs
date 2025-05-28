@@ -7,6 +7,12 @@ public class MarchinSquaresSpawner : MonoBehaviour
     TilemapGenerator tilemapGenerator;
     int[,] tilemap;
     int[,] marchedTilemap;
+    //counterclockwise binary representation of the corners
+    //this way each bit has an associated corner
+    //bottom right (br) = 1
+    //top right (tr) = 2
+    //top left (tl) = 4
+    //bottom left (bl) = 8
 
     void Start()
     {
@@ -17,13 +23,42 @@ public class MarchinSquaresSpawner : MonoBehaviour
     void CreateMarchingSquaresTilemap()
     {
         tilemap = tilemapGenerator.GetTilemap();
+        marchedTilemap = new int[tilemap.GetLength(0) - 1, tilemap.GetLength(1) - 1];
 
-        for (int x = 0; x < tilemap.GetLength(0) - 2; x++)
+        //march from left to right, bottom to top
+        for (int x = 0; x < tilemap.GetLength(0) - 1; x++)
         {
-            for (int y = 0; y < tilemap.GetLength(1) - 2; y++)
+            for (int y = 0; y < tilemap.GetLength(1) - 1; y++)
             {
+                int binaryCorners = 0;
+                if (tilemap[x + 1, y] == 1) //br
+                    binaryCorners += 1;
+                if (tilemap[x + 1, y + 1] == 1) //tr
+                    binaryCorners += 2;
+                if (tilemap[x, y + 1] == 1) //tl
+                    binaryCorners += 4;
+                if (tilemap[x, y] == 1) //bl
+                    binaryCorners += 8;
 
+                marchedTilemap[x, y] = binaryCorners;
             }
         }
+    }
+
+    [Button]
+    //!REMINDER! message can get so long it will get truncated in unity
+    void PrintMarchedTileMap()
+    {
+        string result = "";
+        for (int y = marchedTilemap.GetLength(1) - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < marchedTilemap.GetLength(0); x++)
+            {
+                result += marchedTilemap[x, y] + " "; //add a aspace because there can be numbers above 9
+            }
+            result += "\n";
+        }
+
+        print(result);
     }
 }

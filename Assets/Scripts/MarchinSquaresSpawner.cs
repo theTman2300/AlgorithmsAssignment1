@@ -121,6 +121,9 @@ public class MarchinSquaresSpawner : MonoBehaviour
             floorQueue.Clear();
             floorQueue.AddRange(queue);
         }
+
+        Debug.Log("Floor spawned");
+
     }
 
     [Button]

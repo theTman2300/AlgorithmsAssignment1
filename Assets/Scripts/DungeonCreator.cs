@@ -135,21 +135,23 @@ public class DungeonCreator : MonoBehaviour
             }
         }
 
-        //if (Input.GetMouseButtonUp(0))
-        //    SelectRoom();
+        if (Input.GetMouseButtonUp(2))
+            SelectRoom();
 
         //room cursor
         AlgorithmsUtils.DebugRectInt(selectedRoom, Color.red);
 
     }
 
-    // only works top down in orthographic view (not sure if orthographic is required, but that is how i have previously used it)
     void SelectRoom()
     {
-
-        if (selectedRoom == default || selectedRoom != FindRoomAtPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition)))
+        Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (!Physics.Raycast(mouseRay, out RaycastHit hit))
+            return;
+        Vector3 pos = new(hit.point.x, 0, hit.point.z);
+        if (selectedRoom == default || selectedRoom != FindRoomAtPosition(pos))
         {
-            selectedRoom = FindRoomAtPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            selectedRoom = FindRoomAtPosition(pos);
             Debug.Log("Selected Room " + selectedRoom);
             roomGraph.PrintEdgeNodes(selectedRoom);
         }

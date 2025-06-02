@@ -82,8 +82,8 @@ public class DungeonCreator : MonoBehaviour
         Camera.main.transform.position = new(DungeonBounds.width / 2, Camera.main.transform.position.y, DungeonBounds.height / 2);
         */
 
-            //set initial room
-            //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
+        //set initial room
+        //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
         rooms.Add(DungeonBounds);
 
         //check whether maxGenerationSize is bigger then minimum
@@ -416,7 +416,7 @@ public class DungeonCreator : MonoBehaviour
 
         //start asset spawing
         yield return new WaitForSeconds(4);
-        if(gameObject.TryGetComponent<MarchinSquaresSpawner>(out MarchinSquaresSpawner spawner))
+        if (gameObject.TryGetComponent<MarchinSquaresSpawner>(out MarchinSquaresSpawner spawner))
         {
             DrawGraph = false;
             spawner.SpawnAssets();

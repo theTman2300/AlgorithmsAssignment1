@@ -27,7 +27,7 @@ public class Pathfinding : MonoBehaviour
         Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(mouseRay, out RaycastHit hit))
             return;
-        
+
         print(hit.point);
         agent.SetDestination(hit.point);
     }

@@ -37,6 +37,7 @@ public class DungeonCreator : MonoBehaviour
     [SerializeField, ReadOnly] List<RectInt> doors = new List<RectInt>(); //doors between rooms
     [Space]
     [SerializeField] UnityEvent onResetDungeon = new();
+    [SerializeField] Transform debugHitPlane;
     RectInt currentWorkingRoom = default; //current room being split
     System.Random rng; //this is used because unity random seed doesn't work when using ienumerators
 
@@ -69,6 +70,11 @@ public class DungeonCreator : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+        if (debugHitPlane != null)
+        {
+            debugHitPlane.localScale = new(DungeonBounds.width, DungeonBounds.height, 1);
+            debugHitPlane.position = new(DungeonBounds.width / 2, 0, DungeonBounds.height / 2);
+        }
 
         /*
         //set orthographic camera size and position to fit dungeon
@@ -76,8 +82,8 @@ public class DungeonCreator : MonoBehaviour
         Camera.main.transform.position = new(DungeonBounds.width / 2, Camera.main.transform.position.y, DungeonBounds.height / 2);
         */
 
-        //set initial room
-        //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
+            //set initial room
+            //rooms.Add(new RectInt(DungeonBounds.x + 1, DungeonBounds.y + 1, DungeonBounds.width - 2, DungeonBounds.height - 2));
         rooms.Add(DungeonBounds);
 
         //check whether maxGenerationSize is bigger then minimum
@@ -135,7 +141,7 @@ public class DungeonCreator : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonUp(2))
+        if (Input.GetMouseButtonDown(2))
             SelectRoom();
 
         //room cursor
